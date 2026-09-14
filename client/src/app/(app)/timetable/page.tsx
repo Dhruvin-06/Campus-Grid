@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { timetableApi } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Clock, MapPin, X, BookOpen } from 'lucide-react';
 
@@ -26,6 +27,8 @@ interface Slot {
 const emptySlot = { day: 'Monday', subject: '', teacher: '', room: '', startTime: '09:00', endTime: '10:00', color: '#6366f1', type: 'lecture' };
 
 export default function TimetablePage() {
+  const { user } = useAuth();
+  const canEdit = user?.role === 'admin' || user?.role === 'faculty';
   const [timetable, setTimetable] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -88,9 +91,11 @@ export default function TimetablePage() {
             {timetable?.semester || 'Your weekly class schedule'}
           </p>
         </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Add Slot
-        </button>
+        {canEdit && (
+          <button onClick={openAdd} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> Add Slot
+          </button>
+        )}
       </div>
 
       {/* Grid */}
@@ -110,7 +115,7 @@ export default function TimetablePage() {
                     <motion.div key={slot._id} layout
                       className="rounded-xl p-2.5 cursor-pointer group relative"
                       style={{ background: `${slot.color}20`, borderLeft: `3px solid ${slot.color}` }}
-                      onClick={() => openEdit(slot)}>
+                      onClick={() => canEdit && openEdit(slot)}>
                       <p className="text-xs font-semibold truncate" style={{ color: slot.color }}>{slot.subject}</p>
                       <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                         <Clock size={10} /> {slot.startTime}–{slot.endTime}
@@ -120,11 +125,13 @@ export default function TimetablePage() {
                           <MapPin size={10} /> {slot.room}
                         </p>
                       )}
-                      <button onClick={(e) => { e.stopPropagation(); handleDelete(slot._id); }}
-                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded"
-                        style={{ color: '#f87171' }}>
-                        <Trash2 size={12} />
-                      </button>
+                      {canEdit && (
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(slot._id); }}
+                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded"
+                          style={{ color: '#f87171' }}>
+                          <Trash2 size={12} />
+                        </button>
+                      )}
                     </motion.div>
                   ))}
                   {getSlotsForDay(day).length === 0 && (

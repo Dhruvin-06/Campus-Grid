@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { assignmentsApi } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, X, Clock, AlertTriangle, CheckCircle2, Circle, Loader } from 'lucide-react';
 import { formatDistanceToNow, isPast } from 'date-fns';
@@ -26,6 +27,8 @@ const PRIORITY_COLORS: Record<Priority, string> = { low: '#10b981', medium: '#f5
 const emptyForm = { title: '', description: '', subject: '', dueDate: '', priority: 'medium' as Priority, tags: '' };
 
 export default function AssignmentsPage() {
+  const { user } = useAuth();
+  const canEdit = user?.role === 'admin' || user?.role === 'faculty';
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -92,9 +95,11 @@ export default function AssignmentsPage() {
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Drag cards between columns to update status</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> New Assignment
-        </button>
+        {canEdit && (
+          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> New Assignment
+          </button>
+        )}
       </div>
 
       {/* Stats bar */}
@@ -150,15 +155,17 @@ export default function AssignmentsPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        draggable
-                        onDragStart={() => handleDragStart(a._id)}
-                        className="glass-card p-4 cursor-grab active:cursor-grabbing group relative"
+                        draggable={canEdit}
+                        onDragStart={() => canEdit && handleDragStart(a._id)}
+                        className={`glass-card p-4 group relative ${canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
                         style={{ borderLeft: `3px solid ${PRIORITY_COLORS[a.priority]}` }}>
-                        <button onClick={() => deleteAssignment(a._id)}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg"
-                          style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>
-                          <Trash2 size={12} />
-                        </button>
+                        {canEdit && (
+                          <button onClick={() => deleteAssignment(a._id)}
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg"
+                            style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)' }}>
+                            <Trash2 size={12} />
+                          </button>
+                        )}
                         <p className="font-semibold text-sm pr-6 mb-1">{a.title}</p>
                         {a.subject && <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>{a.subject}</p>}
                         {a.description && <p className="text-xs mb-2 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{a.description}</p>}
@@ -183,16 +190,18 @@ export default function AssignmentsPage() {
                             ))}
                           </div>
                         )}
-                        {/* Quick status buttons */}
-                        <div className="flex gap-1 mt-3">
-                          {COLUMNS.filter((c) => c.id !== col.id).map((c) => (
-                            <button key={c.id} onClick={() => moveAssignment(a._id, c.id)}
-                              className="text-xs px-2 py-1 rounded-lg flex-1 text-center transition-all"
-                              style={{ background: `${c.color}15`, color: c.color }}>
-                              → {c.label}
-                            </button>
-                          ))}
-                        </div>
+                        {/* Quick status buttons — staff only */}
+                        {canEdit && (
+                          <div className="flex gap-1 mt-3">
+                            {COLUMNS.filter((c) => c.id !== col.id).map((c) => (
+                              <button key={c.id} onClick={() => moveAssignment(a._id, c.id)}
+                                className="text-xs px-2 py-1 rounded-lg flex-1 text-center transition-all"
+                                style={{ background: `${c.color}15`, color: c.color }}>
+                                → {c.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </motion.div>
                     );
                   })}

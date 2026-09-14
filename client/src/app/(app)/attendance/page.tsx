@@ -20,6 +20,7 @@ interface SubjectAtt {
 
 export default function AttendancePage() {
   const { user } = useAuth();
+  const canEdit = user?.role === 'admin' || user?.role === 'faculty';
   const [semester, setSemester] = useState(user?.year ? `Semester ${(user.year - 1) * 2 + 1}` : 'Semester 1');
   const [attendance, setAttendance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -97,9 +98,11 @@ export default function AttendancePage() {
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-glass)', color: 'var(--text-primary)' }}>
             {SEMESTERS.map((s) => <option key={s} value={s} style={{ background: '#0f1629' }}>{s}</option>)}
           </select>
-          <button onClick={() => setShowAddSubject(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Add Subject
-          </button>
+          {canEdit && (
+            <button onClick={() => setShowAddSubject(true)} className="btn-primary flex items-center gap-2">
+              <Plus size={16} /> Add Subject
+            </button>
+          )}
         </div>
       </div>
 
@@ -133,9 +136,11 @@ export default function AttendancePage() {
           <BookOpen size={48} className="mx-auto mb-4 opacity-30" />
           <p className="font-semibold mb-2">No subjects yet</p>
           <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Add your subjects to start tracking attendance</p>
-          <button onClick={() => setShowAddSubject(true)} className="btn-primary">
-            <Plus size={15} className="inline mr-2" /> Add First Subject
-          </button>
+          {canEdit && (
+            <button onClick={() => setShowAddSubject(true)} className="btn-primary">
+              <Plus size={15} className="inline mr-2" /> Add First Subject
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
@@ -155,10 +160,12 @@ export default function AttendancePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold" style={{ color }}>{pct}%</span>
-                    <button onClick={() => removeSubject(subj._id)} className="p-1 rounded-lg transition-colors hover:bg-red-500/10"
-                      style={{ color: '#f87171' }}>
-                      <Trash2 size={14} />
-                    </button>
+                    {canEdit && (
+                      <button onClick={() => removeSubject(subj._id)} className="p-1 rounded-lg transition-colors hover:bg-red-500/10"
+                        style={{ color: '#f87171' }}>
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
                 {/* Progress bar */}
@@ -172,11 +179,13 @@ export default function AttendancePage() {
                     ? <span style={{ color: '#f59e0b' }}>⚠️ Need {classesNeeded} more present</span>
                     : <span style={{ color: '#10b981' }}>✓ Safe</span>}
                 </div>
-                <button onClick={() => { setShowLogModal(subj); setLogForm({ date: new Date().toISOString().split('T')[0], status: 'present', note: '' }); }}
-                  className="w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                  style={{ background: 'rgba(99,102,241,0.15)', color: 'var(--color-primary-light)', border: '1px solid rgba(99,102,241,0.25)' }}>
-                  <Calendar size={13} /> Log Today's Class
-                </button>
+                {canEdit && (
+                  <button onClick={() => { setShowLogModal(subj); setLogForm({ date: new Date().toISOString().split('T')[0], status: 'present', note: '' }); }}
+                    className="w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{ background: 'rgba(99,102,241,0.15)', color: 'var(--color-primary-light)', border: '1px solid rgba(99,102,241,0.25)' }}>
+                    <Calendar size={13} /> Log Today's Class
+                  </button>
+                )}
               </motion.div>
             );
           })}

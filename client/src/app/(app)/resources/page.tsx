@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { resourcesApi } from '@/lib/api';
 import { Resource } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import {
   BookOpen, Upload, Search, Download, Heart, Eye, Filter,
@@ -22,6 +23,8 @@ const TYPES = [
 ];
 
 export default function ResourcesPage() {
+  const { user } = useAuth();
+  const canUpload = user?.role === 'admin' || user?.role === 'faculty';
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -119,9 +122,11 @@ export default function ResourcesPage() {
             {total} resources available · Notes, PYQs, Assignments & more
           </p>
         </div>
-        <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Upload
-        </button>
+        {canUpload && (
+          <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> Upload
+          </button>
+        )}
       </div>
 
       {/* Search + Filters */}
@@ -200,7 +205,7 @@ export default function ResourcesPage() {
 
               {/* Uploader */}
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                by {typeof resource.uploadedBy === 'object' ? resource.uploadedBy.name : 'Anonymous'}
+                by {typeof resource.uploadedBy === 'object' ? (resource.uploadedBy?.name || 'Anonymous') : 'Anonymous'}
               </p>
 
               {/* Actions */}

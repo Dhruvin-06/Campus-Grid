@@ -157,7 +157,7 @@ export default function AnnouncementsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-                <span>by {typeof ann.postedBy === 'object' ? ann.postedBy.name : 'Admin'}</span>
+                <span>by {typeof ann.postedBy === 'object' ? (ann.postedBy?.name || 'Admin') : 'Admin'}</span>
                 <span className="flex items-center gap-1"><Calendar size={11} /> {new Date(ann.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               </div>
             </motion.div>
@@ -186,9 +186,9 @@ export default function AnnouncementsPage() {
                 <div className="flex items-center gap-2 text-xs mt-auto" style={{ color: 'var(--text-muted)' }}>
                   <div className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs text-white"
                     style={{ background: 'linear-gradient(135deg, #6366f1, #06b6d4)' }}>
-                    {typeof blog.author === 'object' ? blog.author.name[0] : 'A'}
+                    {typeof blog.author === 'object' ? (blog.author?.name?.[0] || 'A') : 'A'}
                   </div>
-                  <span>{typeof blog.author === 'object' ? blog.author.name : 'Author'}</span>
+                  <span>{typeof blog.author === 'object' ? (blog.author?.name || 'Author') : 'Author'}</span>
                   <span className="ml-auto">{new Date(blog.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--border-glass)' }}>
