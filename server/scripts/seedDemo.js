@@ -29,6 +29,16 @@ const DEMO_USERS = [
     isVerified: true,
     isActive:   true,
   },
+  {
+    name:       'Demo Faculty',
+    email:      'faculty@campus.edu',
+    rollNumber: 'FAC0001',
+    password:   'faculty123',
+    role:       'faculty',
+    branch:     'CSE',
+    isVerified: true,
+    isActive:   true,
+  },
 ];
 
 async function main() {

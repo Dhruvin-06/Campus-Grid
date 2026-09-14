@@ -61,6 +61,7 @@ npm run dev
 | Role | Email | Password |
 |---|---|---|
 | Admin | admin@campus.edu | admin123 |
+| Faculty | faculty@campus.edu | faculty123 |
 | Student | student@campus.edu | student123 |
 
 ## 📄 License
