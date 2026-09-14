@@ -7,9 +7,9 @@ const staffOnly = authorize('admin', 'faculty');
 
 router.use(protect);
 router.get('/', getAttendance);
-router.post('/subjects', staffOnly, addSubject);
-router.post('/subjects/:subjectId/log', staffOnly, logAttendance);
-router.delete('/subjects/:subjectId', staffOnly, removeSubject);
-router.delete('/subjects/:subjectId/log/:recordId', staffOnly, deleteRecord);
+router.post('/subjects', addSubject);                              // students manage own subjects
+router.post('/subjects/:subjectId/log', logAttendance);           // students log own attendance
+router.delete('/subjects/:subjectId', removeSubject);             // students delete own subjects
+router.delete('/subjects/:subjectId/log/:recordId', deleteRecord); // students delete own records
 
 module.exports = router;

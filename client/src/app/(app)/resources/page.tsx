@@ -122,9 +122,14 @@ export default function ResourcesPage() {
             {total} resources available · Notes, PYQs, Assignments & more
           </p>
         </div>
-        {canUpload && (
+        {canUpload ? (
           <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
             <Plus size={16} /> Upload
+          </button>
+        ) : (
+          <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2"
+            style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}>
+            <Plus size={16} /> Submit Resource
           </button>
         )}
       </div>
@@ -244,10 +249,16 @@ export default function ResourcesPage() {
           >
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold flex items-center gap-2">
-                <Upload size={20} style={{ color: 'var(--color-primary)' }} /> Upload Resource
+                <Upload size={20} style={{ color: 'var(--color-primary)' }} />
+                {canUpload ? 'Upload Resource' : 'Submit Resource for Review'}
               </h2>
               <button onClick={() => setShowUpload(false)}><X size={20} style={{ color: 'var(--text-muted)' }} /></button>
             </div>
+            {!canUpload && (
+              <div className="mb-4 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}>
+                📋 Your submission will be reviewed by admin before it goes live.
+              </div>
+            )}
 
             <form onSubmit={handleUpload} className="space-y-4">
               <div>

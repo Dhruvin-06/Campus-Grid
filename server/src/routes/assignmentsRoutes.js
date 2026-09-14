@@ -9,7 +9,7 @@ router.use(protect);
 router.get('/stats', getStats);
 router.get('/', getAssignments);
 router.post('/', staffOnly, createAssignment);
-router.put('/:id', staffOnly, updateAssignment);
+router.put('/:id', updateAssignment);          // students can move their own cards
 router.delete('/:id', staffOnly, deleteAssignment);
 
 module.exports = router;

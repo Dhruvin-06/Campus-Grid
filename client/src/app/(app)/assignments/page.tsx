@@ -155,9 +155,9 @@ export default function AssignmentsPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        draggable={canEdit}
-                        onDragStart={() => canEdit && handleDragStart(a._id)}
-                        className={`glass-card p-4 group relative ${canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
+                        draggable
+                        onDragStart={() => handleDragStart(a._id)}
+                        className="glass-card p-4 cursor-grab active:cursor-grabbing group relative"
                         style={{ borderLeft: `3px solid ${PRIORITY_COLORS[a.priority]}` }}>
                         {canEdit && (
                           <button onClick={() => deleteAssignment(a._id)}
@@ -190,18 +190,16 @@ export default function AssignmentsPage() {
                             ))}
                           </div>
                         )}
-                        {/* Quick status buttons — staff only */}
-                        {canEdit && (
-                          <div className="flex gap-1 mt-3">
-                            {COLUMNS.filter((c) => c.id !== col.id).map((c) => (
-                              <button key={c.id} onClick={() => moveAssignment(a._id, c.id)}
-                                className="text-xs px-2 py-1 rounded-lg flex-1 text-center transition-all"
-                                style={{ background: `${c.color}15`, color: c.color }}>
-                                → {c.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {/* Status move buttons — all users can move their own cards */}
+                        <div className="flex gap-1 mt-3">
+                          {COLUMNS.filter((c) => c.id !== col.id).map((c) => (
+                            <button key={c.id} onClick={() => moveAssignment(a._id, c.id)}
+                              className="text-xs px-2 py-1 rounded-lg flex-1 text-center transition-all"
+                              style={{ background: `${c.color}15`, color: c.color }}>
+                              → {c.label}
+                            </button>
+                          ))}
+                        </div>
                       </motion.div>
                     );
                   })}
