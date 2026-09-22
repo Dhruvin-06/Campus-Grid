@@ -1,4 +1,4 @@
-# CampusGrid — Smart Campus OS
+# CampusGrid — Smart Campus
 
 A full-stack campus management platform built with **Next.js 15** (frontend) and **Node.js / Express** (backend), backed by **MongoDB**.
 
