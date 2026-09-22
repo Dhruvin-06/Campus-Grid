@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'faculty', 'admin', 'placement_cell'],
+      enum: ['student', 'faculty', 'placement', 'admin'],
       default: 'student',
     },
     branch: {
@@ -52,6 +52,9 @@ const userSchema = new mongoose.Schema(
     },
     skills: [{ type: String }],
     interests: [{ type: String }],
+    technicalInterests: [{ type: String }],
+    projectInterests: [{ type: String }],
+    collaborationPrefs: { type: String, default: '' },
     linkedIn: { type: String, default: '' },
     github: { type: String, default: '' },
     isVerified: {
@@ -69,7 +72,6 @@ const userSchema = new mongoose.Schema(
     },
     connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     connectionRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    bookmarkedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
     notifications: [
       {
         message: String,

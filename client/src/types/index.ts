@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   rollNumber: string;
-  role: 'student' | 'faculty' | 'admin' | 'placement_cell';
+  role: 'student' | 'faculty' | 'placement' | 'admin';
   branch: string;
   year?: number;
   avatar?: string;
@@ -11,10 +11,14 @@ export interface User {
   phone?: string;
   skills?: string[];
   interests?: string[];
+  technicalInterests?: string[];
+  projectInterests?: string[];
+  collaborationPrefs?: string;
   isVerified: boolean;
   isActive: boolean;
   connections?: User[];
   connectionRequests?: string[];
+  linkedIn?: string;
   linkedin?: string;
   github?: string;
   portfolio?: string;
@@ -38,33 +42,6 @@ export interface Resource {
   views: number;
   approved: boolean;
   likes?: string[];
-  createdAt: string;
-}
-
-export interface Job {
-  _id: string;
-  title: string;
-  company: string;
-  type: 'placement' | 'internship' | 'hackathon' | 'competition' | 'scholarship';
-  description: string;
-  eligibility?: {
-    branches?: string[];
-    minCGPA?: number;
-    yearOfPassing?: number[];
-    backlogs?: number;
-    otherCriteria?: string;
-  };
-  package?: string;
-  stipend?: string;
-  location?: string;
-  deadline?: string;
-  applyLink?: string;
-  companyLogo?: string;
-  postedBy: User | string;
-  views: number;
-  bookmarks?: string[];
-  isActive: boolean;
-  tags?: string[];
   createdAt: string;
 }
 
@@ -97,7 +74,7 @@ export interface Announcement {
   _id: string;
   title: string;
   content: string;
-  type: 'general' | 'urgent' | 'event' | 'holiday' | 'exam';
+  type: 'general' | 'urgent' | 'event' | 'holiday' | 'exam' | 'placement';
   targetAudience: string;
   postedBy: User;
   isPinned: boolean;
@@ -105,18 +82,51 @@ export interface Announcement {
   createdAt: string;
 }
 
-export interface Blog {
+export interface CampusPost {
   _id: string;
   title: string;
   content: string;
   excerpt?: string;
   coverImage?: string;
   author: User;
+  category: 'achievement' | 'event' | 'project' | 'general' | 'placement' | 'academic';
   tags?: string[];
   status: 'draft' | 'pending_approval' | 'published' | 'rejected';
   likes?: string[];
   comments?: Array<{ user: User; content: string; createdAt: string }>;
   views: number;
+  createdAt: string;
+}
+
+export interface Opportunity {
+  _id: string;
+  title: string;
+  company: string;
+  description: string;
+  type: 'placement' | 'internship' | 'hackathon';
+  skills: string[];
+  eligibility?: string;
+  branch: string[];
+  graduationYear?: number;
+  minCGPA?: number;
+  location: string;
+  packageOrStipend?: string;
+  deadline?: string;
+  applicationLink?: string;
+  postedBy: User;
+  isVerified: boolean;
+  isPublished: boolean;
+  isSaved?: boolean;
+  saves?: string[];
+  views: number;
+  createdAt: string;
+}
+
+export interface Notification {
+  _id: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
   createdAt: string;
 }
 
@@ -131,4 +141,29 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
+}
+
+export interface PeerMatch {
+  _id: string;
+  name: string;
+  avatar?: string;
+  rollNumber: string;
+  branch: string;
+  year?: number;
+  skills: string[];
+  technicalInterests: string[];
+  projectInterests: string[];
+  collaborationPrefs?: string;
+  bio?: string;
+  compatibilityScore: number;
+  matchedOn: {
+    skills: string[];
+    technicalInterests: string[];
+    projectInterests: string[];
+    interests: string[];
+    sameBranch: boolean;
+    sameYear: boolean;
+  };
+  isConnected: boolean;
+  hasPendingRequest: boolean;
 }

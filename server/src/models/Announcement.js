@@ -8,12 +8,12 @@ const announcementSchema = new mongoose.Schema(
     content: { type: String, required: true },
     type: {
       type: String,
-      enum: ['general', 'urgent', 'event', 'holiday', 'exam'],
+      enum: ['general', 'urgent', 'event', 'holiday', 'exam', 'placement'],
       default: 'general',
     },
     targetAudience: {
       type: String,
-      enum: ['all', 'students', 'faculty', 'specific_branch', 'specific_year'],
+      enum: ['all', 'students', 'faculty', 'placement', 'specific_branch', 'specific_year'],
       default: 'all',
     },
     targetBranch: { type: String },
@@ -27,15 +27,21 @@ const announcementSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ─── Blog Schema ───────────────────────────────────────────────────────────────
+// ─── CampusPost Schema (student/faculty campus feed posts) ─────────────────────
+// Previously named "Blog" — renamed for clarity.
 
-const blogSchema = new mongoose.Schema(
+const campusPostSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true },
     excerpt: { type: String, maxlength: 300 },
     coverImage: { type: String, default: '' },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    category: {
+      type: String,
+      enum: ['achievement', 'event', 'project', 'general', 'placement', 'academic'],
+      default: 'general',
+    },
     tags: [{ type: String }],
     status: {
       type: String,
@@ -56,7 +62,9 @@ const blogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Announcement = mongoose.model('Announcement', announcementSchema);
-const Blog = mongoose.model('Blog', blogSchema);
+campusPostSchema.index({ title: 'text', content: 'text', tags: 'text' });
 
-module.exports = { Announcement, Blog };
+const Announcement = mongoose.model('Announcement', announcementSchema);
+const CampusPost = mongoose.model('CampusPost', campusPostSchema);
+
+module.exports = { Announcement, CampusPost };

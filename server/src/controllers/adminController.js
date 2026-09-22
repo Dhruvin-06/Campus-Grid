@@ -1,9 +1,8 @@
 const User = require('../models/User');
 const Resource = require('../models/Resource');
-const Job = require('../models/Job');
-const { Blog } = require('../models/Announcement');
+const { Announcement, CampusPost } = require('../models/Announcement');
 const LostFound = require('../models/LostFound');
-const Event = require('../models/Event');
+const Opportunity = require('../models/Opportunity');
 const AuditLog = require('../models/AuditLog');
 const asyncHandler = require('express-async-handler');
 
@@ -26,19 +25,20 @@ const logAction = async (req, action, targetModel = '', targetId = null, details
 // @route   GET /api/admin/analytics
 const getAnalytics = asyncHandler(async (req, res) => {
   const [
-    totalUsers, totalStudents, totalFaculty,
-    totalResources, totalJobs, totalBlogs,
-    totalLostFound, pendingResources, pendingBlogs, recentUsers,
+    totalUsers, totalStudents, totalFaculty, totalPlacement,
+    totalResources, totalCampusPosts,
+    totalLostFound, pendingResources, pendingPosts, pendingOpportunities, recentUsers,
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: 'student' }),
     User.countDocuments({ role: 'faculty' }),
+    User.countDocuments({ role: 'placement' }),
     Resource.countDocuments({ approved: true }),
-    Job.countDocuments({ isActive: true }),
-    Blog.countDocuments({ status: 'published' }),
+    CampusPost.countDocuments({ status: 'published' }),
     LostFound.countDocuments({ resolved: false }),
     Resource.countDocuments({ approved: false }),
-    Blog.countDocuments({ status: 'pending_approval' }),
+    CampusPost.countDocuments({ status: 'pending_approval' }),
+    Opportunity.countDocuments({ isVerified: false, isActive: true }),
     User.find().sort({ createdAt: -1 }).limit(5).select('name email rollNumber role branch createdAt'),
   ]);
 
@@ -57,23 +57,31 @@ const getAnalytics = asyncHandler(async (req, res) => {
     { $sort: { '_id.year': 1, '_id.month': 1 } },
   ]);
 
-  // Year-wise distribution
   const yearDistribution = await User.aggregate([
     { $match: { role: 'student', year: { $exists: true } } },
     { $group: { _id: '$year', count: { $sum: 1 } } },
     { $sort: { _id: 1 } },
   ]);
 
+  // Opportunity type distribution
+  const opportunityStats = await Opportunity.aggregate([
+    { $match: { isPublished: true } },
+    { $group: { _id: '$type', count: { $sum: 1 } } },
+  ]);
+
   res.json({
     success: true,
     stats: {
-      totalUsers, totalStudents, totalFaculty,
-      totalResources, totalJobs, totalBlogs,
-      totalLostFound, pendingItems: pendingResources + pendingBlogs,
+      totalUsers, totalStudents, totalFaculty, totalPlacement,
+      totalResources, totalCampusPosts,
+      totalLostFound,
+      pendingItems: pendingResources + pendingPosts + pendingOpportunities,
+      pendingResources, pendingPosts, pendingOpportunities,
     },
     branchDistribution,
     registrationTrend,
     yearDistribution,
+    opportunityStats,
     recentUsers,
   });
 });
@@ -113,32 +121,7 @@ const getAuditLog = asyncHandler(async (req, res) => {
   res.json({ success: true, logs, total, page, pages: Math.ceil(total / limit) });
 });
 
-// @desc    Get placement report (branch-wise placed students)
-// @route   GET /api/admin/placement-report
-const getPlacementReport = asyncHandler(async (req, res) => {
-  const jobs = await Job.find({ type: 'placement', isActive: false })
-    .select('title company salary branch year applicants')
-    .lean();
-
-  const branchStats = await User.aggregate([
-    { $match: { role: 'student' } },
-    {
-      $group: {
-        _id: { branch: '$branch', year: '$year' },
-        totalStudents: { $sum: 1 },
-      },
-    },
-    { $sort: { '_id.branch': 1 } },
-  ]);
-
-  const activeJobs = await Job.find({ type: 'placement', isActive: true })
-    .select('title company salary branch')
-    .lean();
-
-  res.json({ success: true, branchStats, activeJobs, closedJobs: jobs });
-});
-
-// @desc    Broadcast announcement to users
+// @desc    Broadcast announcement to users (admin notification push)
 // @route   POST /api/admin/broadcast
 const broadcastAnnouncement = asyncHandler(async (req, res) => {
   const { message, targetBranch, targetYear, targetRole } = req.body;
@@ -164,42 +147,60 @@ const broadcastAnnouncement = asyncHandler(async (req, res) => {
   res.json({ success: true, sentTo: result.modifiedCount });
 });
 
-// @desc    Get all events (admin, incl. unpublished)
-// @route   GET /api/admin/events
-const getAdminEvents = asyncHandler(async (req, res) => {
-  const events = await Event.find({})
-    .populate('organizer', 'name avatar')
-    .sort({ createdAt: -1 });
-  res.json({ success: true, events });
+// @desc    Admin: approve or reject a resource
+// @route   PUT /api/admin/resources/:id/review
+const reviewResource = asyncHandler(async (req, res) => {
+  const { action } = req.body; // 'approve' | 'reject'
+
+  if (!['approve', 'reject'].includes(action)) {
+    return res.status(400).json({ success: false, message: 'Invalid action. Use approve or reject.' });
+  }
+
+  const resource = await Resource.findByIdAndUpdate(
+    req.params.id,
+    { approved: action === 'approve', approvedBy: req.user._id },
+    { new: true }
+  ).populate('uploadedBy', 'name rollNumber');
+
+  if (!resource) return res.status(404).json({ success: false, message: 'Resource not found' });
+
+  await logAction(req, `RESOURCE_${action.toUpperCase()}D`, 'Resource', resource._id, resource.title);
+
+  // Notify the uploader
+  if (resource.uploadedBy?._id) {
+    await User.findByIdAndUpdate(resource.uploadedBy._id, {
+      $push: {
+        notifications: {
+          message: `Your resource "${resource.title}" has been ${action === 'approve' ? 'approved ✅' : 'rejected ❌'} by admin.`,
+          type: action === 'approve' ? 'success' : 'warning',
+          read: false,
+          createdAt: new Date(),
+        },
+      },
+    });
+  }
+
+  res.json({ success: true, resource });
 });
 
-// @desc    Create event
-// @route   POST /api/admin/events
-const createAdminEvent = asyncHandler(async (req, res) => {
-  const event = await Event.create({ ...req.body, organizer: req.user._id });
-  await logAction(req, 'EVENT_CREATED', 'Event', event._id, event.title);
-  res.status(201).json({ success: true, event });
-});
+// @desc    Admin: update user status / role
+// @route   PUT /api/admin/users/:id
+const adminUpdateUser = asyncHandler(async (req, res) => {
+  const { role, isActive } = req.body;
+  const validRoles = ['student', 'faculty', 'placement', 'admin'];
 
-// @desc    Update event
-// @route   PUT /api/admin/events/:id
-const updateAdminEvent = asyncHandler(async (req, res) => {
-  const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  if (!event) return res.status(404).json({ success: false, message: 'Not found' });
-  await logAction(req, 'EVENT_UPDATED', 'Event', event._id, event.title);
-  res.json({ success: true, event });
-});
+  const update = {};
+  if (role && validRoles.includes(role)) update.role = role;
+  if (isActive !== undefined) update.isActive = Boolean(isActive);
 
-// @desc    Delete event
-// @route   DELETE /api/admin/events/:id
-const deleteAdminEvent = asyncHandler(async (req, res) => {
-  const event = await Event.findByIdAndDelete(req.params.id);
-  if (!event) return res.status(404).json({ success: false, message: 'Not found' });
-  await logAction(req, 'EVENT_DELETED', 'Event', req.params.id, event.title);
-  res.json({ success: true, message: 'Event deleted' });
+  const user = await User.findByIdAndUpdate(req.params.id, update, { new: true }).select('-password');
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  await logAction(req, 'USER_UPDATED', 'User', user._id, `Role: ${user.role}, Active: ${user.isActive}`);
+  res.json({ success: true, user });
 });
 
 module.exports = {
-  getAnalytics, getUsers, getAuditLog, getPlacementReport,
-  broadcastAnnouncement, getAdminEvents, createAdminEvent, updateAdminEvent, deleteAdminEvent,
+  getAnalytics, getUsers, getAuditLog,
+  broadcastAnnouncement, reviewResource, adminUpdateUser, logAction,
 };

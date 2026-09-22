@@ -95,4 +95,36 @@ const deletePost = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Post deleted' });
 });
 
-module.exports = { createPost, getPosts, resolvePost, deletePost };
+// @desc    Reach out / claim a lost or found item
+// @route   PUT /api/lostfound/:id/claim
+// @access  Private
+const claimPost = asyncHandler(async (req, res) => {
+  const { message } = req.body;
+  const post = await LostFound.findById(req.params.id).populate('postedBy', 'name email rollNumber');
+
+  if (!post) {
+    res.status(404);
+    throw new Error('Item post not found');
+  }
+
+  const User = require('../models/User');
+  await User.findByIdAndUpdate(post.postedBy._id, {
+    $push: {
+      notifications: {
+        message: `📢 ${req.user.name} (${req.user.rollNumber}) reached out regarding your ${post.type} item "${post.title}": "${message || 'I have information regarding this item.'}"`,
+        type: 'info',
+        read: false,
+        createdAt: new Date(),
+      },
+    },
+  });
+
+  res.json({
+    success: true,
+    message: 'Owner/finder has been notified!',
+    contactInfo: post.contactInfo || post.postedBy.email || 'Direct Messaging Available',
+    poster: post.postedBy,
+  });
+});
+
+module.exports = { createPost, getPosts, resolvePost, deletePost, claimPost };

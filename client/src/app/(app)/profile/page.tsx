@@ -93,25 +93,33 @@ export default function ProfilePage() {
   const getSkillColor = (s: string) => SKILL_COLORS[s.charCodeAt(0) % SKILL_COLORS.length];
 
   const roleColors: Record<string, string> = {
-    student: '#6366f1', faculty: '#06b6d4',
-    admin: '#ef4444', placement_cell: '#10b981',
+    student: '#6366f1', faculty: '#06b6d4', admin: '#ef4444',
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Account Overview</span>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2">
+          <User size={26} className="text-indigo-400" /> My Profile
+        </h1>
+        <p className="text-xs text-slate-400 mt-1">Manage your public academic identity, skills, and interests.</p>
+      </div>
+
       {/* Profile card */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="saas-card p-8">
         <div className="flex items-start gap-6">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <div className="w-24 h-24 rounded-2xl flex items-center justify-center font-bold text-3xl text-white"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #06b6d4)' }}>
+              style={{ background: 'linear-gradient(135deg, #4f46e5, #06b6d4)' }}>
               {user?.avatar
                 ? <img src={user.avatar} alt={user.name} className="w-full h-full object-cover rounded-2xl" />
                 : user?.name?.[0]?.toUpperCase()
               }
             </div>
-            <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-gray-900"
+            <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-slate-900"
               style={{ background: 'var(--color-success)' }} />
           </div>
 
@@ -126,17 +134,17 @@ export default function ProfilePage() {
                 className="input-field text-xl font-bold mb-2"
               />
             ) : (
-              <h1 className="text-2xl font-bold">{user?.name}</h1>
+              <h2 className="text-2xl font-extrabold text-white">{user?.name}</h2>
             )}
-            <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-xs text-slate-400 mb-2">
               {user?.rollNumber} · {user?.email}
             </p>
             <div className="flex flex-wrap gap-2">
-              <span className="badge" style={{ background: `${roleColors[user?.role || 'student']}20`, color: roleColors[user?.role || 'student'] }}>
+              <span className="saas-badge" style={{ background: `${roleColors[user?.role || 'student']}20`, color: roleColors[user?.role || 'student'] }}>
                 {user?.role?.replace('_', ' ')}
               </span>
-              <span className="badge badge-accent">{user?.branch}</span>
-              {user?.year && <span className="badge badge-primary">Year {user.year}</span>}
+              <span className="saas-badge saas-badge-indigo">{user?.branch}</span>
+              {user?.year && <span className="saas-badge saas-badge-violet">Year {user.year}</span>}
             </div>
           </div>
 
@@ -234,7 +242,7 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Skills */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="saas-card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
           <Award size={18} style={{ color: '#f59e0b' }} /> Skills
         </h2>
@@ -283,13 +291,13 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Interests */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="saas-card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
           <BookOpen size={18} style={{ color: 'var(--color-accent)' }} /> Interests
         </h2>
         <div className="flex flex-wrap gap-2 mb-4">
           {(editing ? form.interests : user?.interests || []).map((interest) => (
-            <span key={interest} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium badge-accent">
+            <span key={interest} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold saas-badge-violet">
               {interest}
               {editing && (
                 <button onClick={() => removeInterest(interest)} className="hover:opacity-70">
@@ -316,7 +324,7 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Stats */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="saas-card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
           <Briefcase size={18} style={{ color: 'var(--color-primary)' }} /> Activity
         </h2>

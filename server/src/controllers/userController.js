@@ -1,4 +1,7 @@
 const User = require('../models/User');
+const Resource = require('../models/Resource');
+const LostFound = require('../models/LostFound');
+const Opportunity = require('../models/Opportunity');
 const asyncHandler = require('express-async-handler');
 
 // @desc    Get all users (Admin)
@@ -52,49 +55,97 @@ const getUserById = asyncHandler(async (req, res) => {
   res.json({ success: true, user });
 });
 
-// @desc    Peer match — get students with similar skills
+// @desc    Peer match — get students with similar skills and interests
 // @route   GET /api/users/peer-match
 // @access  Private
 const getPeerMatches = asyncHandler(async (req, res) => {
   const currentUser = await User.findById(req.user.id);
 
-  if (!currentUser.skills || currentUser.skills.length === 0) {
+  const hasProfile = (currentUser.skills?.length || currentUser.technicalInterests?.length || currentUser.interests?.length);
+
+  if (!hasProfile) {
     return res.json({
       success: true,
-      message: 'Add skills to your profile to find peer matches',
+      message: 'Add skills and interests to your profile to find peer matches',
       matches: [],
     });
   }
 
-  // Find users who share at least one skill, excluding self and already-connected
-  const matches = await User.aggregate([
-    {
-      $match: {
-        _id: { $ne: currentUser._id },
-        role: 'student',
-        isActive: true,
-        skills: { $in: currentUser.skills },
-      },
-    },
-    {
-      $addFields: {
-        commonSkills: {
-          $size: {
-            $ifNull: [{ $setIntersection: ['$skills', currentUser.skills] }, []],
-          },
-        },
-      },
-    },
-    { $sort: { commonSkills: -1 } },
-    { $limit: 20 },
-    {
-      $project: {
-        password: 0,
-      },
-    },
-  ]);
+  const mySkills = currentUser.skills || [];
+  const myTechInterests = currentUser.technicalInterests || [];
+  const myProjectInterests = currentUser.projectInterests || [];
+  const myInterests = currentUser.interests || [];
+  const connectedIds = (currentUser.connections || []).map((id) => id.toString());
 
-  res.json({ success: true, matches });
+  // Fetch all active students except self
+  const candidates = await User.find({
+    _id: { $ne: currentUser._id },
+    role: 'student',
+    isActive: true,
+  }).select('name avatar rollNumber branch year skills interests technicalInterests projectInterests collaborationPrefs connections bio');
+
+  // Score each candidate
+  const scored = candidates
+    .map((candidate) => {
+      const cSkills = candidate.skills || [];
+      const cTech = candidate.technicalInterests || [];
+      const cProject = candidate.projectInterests || [];
+      const cInterests = candidate.interests || [];
+
+      // Intersection counts
+      const sharedSkills = mySkills.filter((s) => cSkills.map((x) => x.toLowerCase()).includes(s.toLowerCase()));
+      const sharedTech = myTechInterests.filter((s) => cTech.map((x) => x.toLowerCase()).includes(s.toLowerCase()));
+      const sharedProject = myProjectInterests.filter((s) => cProject.map((x) => x.toLowerCase()).includes(s.toLowerCase()));
+      const sharedInterests = myInterests.filter((s) => cInterests.map((x) => x.toLowerCase()).includes(s.toLowerCase()));
+
+      const sameBranch = currentUser.branch === candidate.branch ? 1 : 0;
+      const sameYear = currentUser.year === candidate.year ? 1 : 0;
+
+      // Weighted scoring: skills 40pts max, tech interests 25pts, project 20pts, interests 10pts, branch 3pts, year 2pts
+      const maxSkills = Math.max(mySkills.length, cSkills.length, 1);
+      const maxTech = Math.max(myTechInterests.length, cTech.length, 1);
+      const maxProject = Math.max(myProjectInterests.length, cProject.length, 1);
+      const maxInterests = Math.max(myInterests.length, cInterests.length, 1);
+
+      const score = Math.round(
+        (sharedSkills.length / maxSkills) * 40 +
+        (sharedTech.length / maxTech) * 25 +
+        (sharedProject.length / maxProject) * 20 +
+        (sharedInterests.length / maxInterests) * 10 +
+        sameBranch * 3 +
+        sameYear * 2
+      );
+
+      return {
+        _id: candidate._id,
+        name: candidate.name,
+        avatar: candidate.avatar,
+        rollNumber: candidate.rollNumber,
+        branch: candidate.branch,
+        year: candidate.year,
+        skills: cSkills,
+        technicalInterests: cTech,
+        projectInterests: cProject,
+        collaborationPrefs: candidate.collaborationPrefs,
+        bio: candidate.bio,
+        compatibilityScore: Math.min(score, 100),
+        matchedOn: {
+          skills: sharedSkills,
+          technicalInterests: sharedTech,
+          projectInterests: sharedProject,
+          interests: sharedInterests,
+          sameBranch: !!sameBranch,
+          sameYear: !!sameYear,
+        },
+        isConnected: connectedIds.includes(candidate._id.toString()),
+        hasPendingRequest: (candidate.connectionRequests || []).map((id) => id.toString()).includes(req.user.id),
+      };
+    })
+    .filter((c) => c.compatibilityScore > 0) // must have at least something in common
+    .sort((a, b) => b.compatibilityScore - a.compatibilityScore)
+    .slice(0, 30);
+
+  res.json({ success: true, matches: scored });
 });
 
 // @desc    Send connection request
@@ -190,7 +241,7 @@ const toggleUserActive = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const changeUserRole = asyncHandler(async (req, res) => {
   const { role } = req.body;
-  const validRoles = ['student', 'faculty', 'admin', 'placement_cell'];
+  const validRoles = ['student', 'faculty', 'placement', 'admin'];
 
   if (!validRoles.includes(role)) {
     res.status(400);
@@ -229,6 +280,52 @@ const updateAvatar = asyncHandler(async (req, res) => {
   res.json({ success: true, avatar: user.avatar });
 });
 
+// @desc    Get public overview stats for dashboard (tailored securely per role on server)
+// @route   GET /api/users/stats
+// @access  Private
+const getOverviewStats = asyncHandler(async (req, res) => {
+  const { Announcement, CampusPost } = require('../models/Announcement');
+
+  const [
+    totalStudents,
+    totalFaculty,
+    totalPlacement,
+    totalResources,
+    pendingResources,
+    totalLostFound,
+    totalOpportunities,
+    pendingPosts,
+    mySavedOpps,
+  ] = await Promise.all([
+    User.countDocuments({ role: 'student' }),
+    User.countDocuments({ role: 'faculty' }),
+    User.countDocuments({ role: 'placement' }),
+    Resource.countDocuments({ approved: true }),
+    Resource.countDocuments({ approved: false }),
+    LostFound.countDocuments({ resolved: false }),
+    Opportunity.countDocuments({ isPublished: true, isActive: true }),
+    CampusPost.countDocuments({ status: 'pending_approval' }),
+    Opportunity.countDocuments({ saves: req.user._id }),
+  ]);
+
+  res.json({
+    success: true,
+    stats: {
+      role: req.user.role,
+      totalStudents,
+      totalFaculty,
+      totalPlacement,
+      totalResources,
+      pendingResources,
+      totalLostFound,
+      totalOpportunities,
+      pendingPosts,
+      mySavedOpps,
+    },
+  });
+});
+
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -239,4 +336,5 @@ module.exports = {
   toggleUserActive,
   changeUserRole,
   updateAvatar,
+  getOverviewStats,
 };

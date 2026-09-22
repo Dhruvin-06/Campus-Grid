@@ -3,67 +3,73 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { adminApi, jobsApi, contentApi } from '@/lib/api';
+import { adminApi, contentApi, opportunitiesApi, notificationsApi, usersApi } from '@/lib/api';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
-  Users, BookOpen, Briefcase, MessageSquare,
-  TrendingUp, Clock, ArrowRight, Bell, Star,
-  CalendarDays, CheckCircle2, ClipboardList, Calendar
+  BookOpen, Bot, Briefcase, Users, Newspaper, MapPin, Bell,
+  ArrowRight, CheckCircle2, AlertCircle, Shield,
+  Sparkles, Search, GraduationCap, ChevronRight,
 } from 'lucide-react';
 
-interface Stats {
-  totalUsers: number;
-  totalStudents: number;
-  totalFaculty: number;
-  totalResources: number;
-  totalJobs: number;
-  totalBlogs: number;
-  totalLostFound: number;
-  pendingItems: number;
+function StatKPI({
+  icon: Icon,
+  label,
+  value,
+  color,
+  href,
+}: {
+  icon: any;
+  label: string;
+  value: string | number | undefined;
+  color: string;
+  href: string;
+}) {
+  return (
+    <Link href={href} className="block group">
+      <div className="saas-card p-4 transition-all duration-200 hover:-translate-y-0.5"
+        style={{ background: 'rgba(17, 24, 39, 0.7)' }}>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
+              <Icon size={14} style={{ color }} />
+            </div>
+            <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
+          </div>
+          <ChevronRight size={12} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" style={{ color }} />
+        </div>
+        <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+          {value ?? '—'}
+        </p>
+      </div>
+    </Link>
+  );
 }
-
-const studentLinks = [
-  { href: '/timetable',  label: 'Timetable',    icon: CalendarDays,  color: 'text-indigo-400',  bg: 'bg-indigo-400/10'  },
-  { href: '/attendance', label: 'Attendance',   icon: CheckCircle2,  color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  { href: '/grades',     label: 'CGPA Tracker', icon: TrendingUp,    color: 'text-violet-400',  bg: 'bg-violet-400/10'  },
-  { href: '/resources',  label: 'Resources',    icon: BookOpen,      color: 'text-cyan-400',    bg: 'bg-cyan-400/10'    },
-];
-
-const facultyLinks = [
-  { href: '/attendance',  label: 'Mark Attendance',  icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  { href: '/assignments', label: 'Assignments',      icon: ClipboardList, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-  { href: '/resources',   label: 'Upload Resources', icon: BookOpen,      color: 'text-violet-400',  bg: 'bg-violet-400/10' },
-  { href: '/grades',      label: 'Grade Entry',      icon: TrendingUp,    color: 'text-amber-400',   bg: 'bg-amber-400/10'  },
-];
-
-const placementLinks = [
-  { href: '/jobs',          label: 'Manage Jobs',     icon: Briefcase,    color: 'text-indigo-400',  bg: 'bg-indigo-400/10'  },
-  { href: '/events',        label: 'Placement Drives',icon: Calendar,     color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  { href: '/peers',         label: 'Student Network', icon: Users,        color: 'text-violet-400',  bg: 'bg-violet-400/10'  },
-  { href: '/announcements', label: 'Broadcasts',      icon: Bell,         color: 'text-amber-400',   bg: 'bg-amber-400/10'   },
-];
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [recentJobs, setRecentJobs] = useState<any[]>([]);
+  const router = useRouter();
+  const [stats, setStats] = useState<any>(null);
   const [recentAnnouncements, setRecentAnnouncements] = useState<any[]>([]);
+  const [recentOpportunities, setRecentOpportunities] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [aiQuery, setAiQuery] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [jobsRes, annRes] = await Promise.all([
-          jobsApi.getAll({ limit: 3 }),
-          contentApi.getAnnouncements({ limit: 3 }),
+        const [annRes, notifRes, oppRes, statsRes] = await Promise.all([
+          contentApi.getAnnouncements({ limit: 4 }),
+          notificationsApi.getUnreadCount(),
+          opportunitiesApi.getAll({ limit: 4 }),
+          user?.role === 'admin' ? adminApi.getAnalytics() : usersApi.getStats(),
         ]);
-        setRecentJobs(jobsRes.data.jobs || []);
         setRecentAnnouncements(annRes.data.announcements || []);
-
-        if (user?.role === 'admin') {
-          const adminRes = await adminApi.getAnalytics();
-          setStats(adminRes.data.stats);
-        }
+        setUnreadCount(notifRes.data.count || 0);
+        setRecentOpportunities(oppRes.data.opportunities || []);
+        setStats(statsRes.data.stats || null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -71,267 +77,281 @@ export default function DashboardPage() {
       }
     };
     fetchData();
-  }, [user]);
+  }, [user?.role]);
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
 
-  const quickLinks =
-    user?.role === 'faculty'        ? facultyLinks :
-    user?.role === 'placement_cell' ? placementLinks :
-    studentLinks;
+  const handleAISearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (aiQuery.trim()) {
+      router.push(`/ai-assistant?q=${encodeURIComponent(aiQuery.trim())}`);
+    }
+  };
+
+  const featureCards = [
+    {
+      id: 'resources',
+      title: 'Learning Hub',
+      subtitle: 'Verified Notes, PDFs & PYQs',
+      href: '/resources',
+      icon: BookOpen,
+      statLabel: stats?.totalResources !== undefined ? `${stats.totalResources} Items` : 'Academic Notes',
+      color: '#818CF8',
+    },
+    {
+      id: 'ai-assistant',
+      title: 'AI Copilot',
+      subtitle: 'Ask your syllabus & study docs',
+      href: '/ai-assistant',
+      icon: Bot,
+      statLabel: 'Smart Assistant',
+      color: '#C084FC',
+    },
+    {
+      id: 'peers',
+      title: 'Peer Network',
+      subtitle: 'Connect with students & faculty',
+      href: '/peers',
+      icon: Users,
+      statLabel: stats?.totalStudents !== undefined ? `${stats.totalStudents} Peers` : 'Directory',
+      color: '#34D399',
+    },
+    {
+      id: 'opportunities',
+      title: 'Opportunities',
+      subtitle: 'Placements, internships & hackathons',
+      href: '/opportunities',
+      icon: Briefcase,
+      statLabel: stats?.totalOpportunities !== undefined ? `${stats.totalOpportunities} Active` : 'Career Portal',
+      color: '#FBBF24',
+    },
+    {
+      id: 'feed',
+      title: 'Campus Feed',
+      subtitle: 'Official announcements & posts',
+      href: '/feed',
+      icon: Newspaper,
+      statLabel: 'Feed',
+      color: '#F472B6',
+    },
+    {
+      id: 'lostfound',
+      title: 'Lost & Found',
+      subtitle: 'Report, locate & claim items',
+      href: '/lostfound',
+      icon: MapPin,
+      statLabel: stats?.totalLostFound !== undefined ? `${stats.totalLostFound} Active Items` : 'Claim Portal',
+      color: '#22D3EE',
+    },
+  ];
+
+  if (user?.role === 'admin') {
+    featureCards.push({
+      id: 'admin',
+      title: 'Admin Console',
+      subtitle: 'Manage moderation & platform users',
+      href: '/admin',
+      icon: Shield,
+      statLabel: stats?.pendingItems ? `${stats.pendingItems} Pending Review` : 'Console',
+      color: '#F87171',
+    });
+  }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
+      {/* ─── Command Center Header ──────────────────────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+        className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+            {greeting}, {user?.name?.split(' ')[0]} 👋
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            Here&apos;s what&apos;s happening across your campus today.
+          </p>
+        </div>
 
-      {/* ── Hero Banner ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card relative overflow-hidden p-8 sm:p-10"
-      >
-        {/* subtle gradient overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 100%)' }}
-        />
-
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            {/* Greeting pill */}
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium mb-4"
-              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)', color: 'var(--color-primary-light)' }}
-            >
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-              {greeting}
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              Welcome back,{' '}
-              <span className="gradient-text">{user?.name?.split(' ')[0]}</span>
-            </h1>
-            <p className="text-base max-w-xl" style={{ color: 'var(--text-secondary)' }}>
-              Here is what's happening across CampusGrid today. You have{' '}
-              {user?.role === 'admin' ? stats?.pendingItems ?? 0 : 'new'} pending items requiring your attention.
-            </p>
+        {/* ─── Prominent AI Command Copilot Search Bar ────────────────────────── */}
+        <form onSubmit={handleAISearch} className="relative group">
+          <div className="absolute inset-0 rounded-xl blur-md transition-opacity opacity-50 group-hover:opacity-100 pointer-events-none"
+            style={{ background: 'linear-gradient(135deg, rgba(79,70,229,0.3) 0%, rgba(124,58,237,0.3) 100%)' }} />
+          <div className="relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+            style={{ background: '#111827', border: '1px solid rgba(124, 58, 237, 0.4)' }}>
+            <Sparkles size={18} style={{ color: '#C084FC' }} />
+            <input
+              value={aiQuery}
+              onChange={(e) => setAiQuery(e.target.value)}
+              placeholder="✨ Ask CampusGrid anything (e.g., Explain binary search, find CSE notes, placement updates)..."
+              className="w-full bg-transparent outline-none text-sm font-medium border-none p-0"
+              style={{ color: 'var(--text-primary)' }}
+            />
+            <button type="submit" className="flex items-center justify-center p-2 rounded-lg transition-all hover:bg-indigo-600 text-white"
+              style={{ background: 'var(--color-primary)' }}>
+              <ArrowRight size={15} />
+            </button>
           </div>
+        </form>
+      </motion.div>
 
-          {/* User meta — desktop only */}
-          <div className="hidden sm:flex flex-col items-end gap-3">
-            <div className="text-right">
-              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{user?.rollNumber}</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {user?.branch}{user?.year ? ` · Year ${user.year}` : ''}
-              </p>
-            </div>
-            <span
-              className="px-3 py-1 rounded-md text-xs font-semibold"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}
-            >
-              {user?.role?.replace('_', ' ').toUpperCase()}
-            </span>
-          </div>
+      {/* ─── KPI Stat Cards (Tailored per Role) ───────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {user?.role === 'admin' ? (
+            <>
+              <StatKPI icon={GraduationCap} label="Students" value={stats?.totalStudents} color="#818CF8" href="/peers" />
+              <StatKPI icon={AlertCircle} label="Pending Resources" value={stats?.pendingResources} color="#F87171" href="/resources" />
+              <StatKPI icon={CheckCircle2} label="Pending Feed Posts" value={stats?.pendingPosts} color="#FBBF24" href="/feed" />
+              <StatKPI icon={Briefcase} label="Active Drives" value={stats?.totalOpportunities} color="#34D399" href="/opportunities" />
+            </>
+          ) : user?.role === 'faculty' ? (
+            <>
+              <StatKPI icon={BookOpen} label="Learning Hub" value={stats?.totalResources} color="#34D399" href="/resources" />
+              <StatKPI icon={AlertCircle} label="Pending Note Approvals" value={stats?.pendingResources} color="#F87171" href="/resources" />
+              <StatKPI icon={Newspaper} label="Pending Post Reviews" value={stats?.pendingPosts} color="#FBBF24" href="/feed" />
+              <StatKPI icon={GraduationCap} label="Student Directory" value={stats?.totalStudents} color="#818CF8" href="/peers" />
+            </>
+          ) : user?.role === 'placement' ? (
+            <>
+              <StatKPI icon={Briefcase} label="Active Drives" value={stats?.totalOpportunities} color="#FBBF24" href="/opportunities" />
+              <StatKPI icon={GraduationCap} label="Total Students" value={stats?.totalStudents} color="#818CF8" href="/peers" />
+              <StatKPI icon={Newspaper} label="Campus Notices" value={recentAnnouncements.length} color="#34D399" href="/feed" />
+              <StatKPI icon={Bell} label="Unread Alerts" value={unreadCount} color="#C084FC" href="/notifications" />
+            </>
+          ) : (
+            <>
+              <StatKPI icon={Briefcase} label="Active Drives" value={stats?.totalOpportunities} color="#FBBF24" href="/opportunities" />
+              <StatKPI icon={CheckCircle2} label="My Saved Drives" value={stats?.mySavedOpps} color="#818CF8" href="/opportunities?saved=true" />
+              <StatKPI icon={BookOpen} label="Verified Resources" value={stats?.totalResources} color="#34D399" href="/resources" />
+              <StatKPI icon={Bell} label="Unread Alerts" value={unreadCount} color="#C084FC" href="/notifications" />
+            </>
+          )}
         </div>
       </motion.div>
 
-      {/* ── Admin Stats ── */}
-      {user?.role === 'admin' && stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Total Users',   value: stats.totalUsers,     icon: Users,     color: '#6366f1', bg: 'rgba(99,102,241,0.1)',  border: 'rgba(99,102,241,0.25)'  },
-            { label: 'Resources',     value: stats.totalResources,  icon: BookOpen,  color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)'  },
-            { label: 'Active Jobs',   value: stats.totalJobs,       icon: Briefcase, color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)'  },
-            { label: 'Pending Items', value: stats.pendingItems,    icon: Clock,     color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)'  },
-          ].map(({ label, value, icon: Icon, color, bg, border }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="glass-card p-5 flex items-center gap-4 group"
-              style={{ borderColor: border }}
-            >
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform"
-                style={{ background: bg, color }}
-              >
-                <Icon size={22} />
-              </div>
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
-                <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{value}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
 
-      {/* ── Quick Links (non-admin) ── */}
-      {user?.role !== 'admin' && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickLinks.map(({ label, href, icon: Icon, color, bg }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
-            >
-              <Link
-                href={href}
-                className="glass-card flex flex-col items-center justify-center p-5 group"
-              >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${bg} ${color} group-hover:scale-110 transition-transform`}>
-                  <Icon size={22} />
-                </div>
-                <span className="text-sm font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>
-                  {label}
-                </span>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Main Content: Jobs + Announcements ── */}
-      <div className={`grid ${user?.role === 'faculty' ? 'grid-cols-1' : 'lg:grid-cols-2'} gap-6`}>
-
-        {/* Recent Jobs — hidden for faculty */}
-        {user?.role !== 'faculty' && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="glass-card p-6"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <Briefcase size={18} style={{ color: '#10b981' }} />
-                Latest Opportunities
+      {/* ─── Mid Section: Career Opportunities & Campus Feed ───────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Career Opportunities */}
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
+          className="saas-card p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold flex items-center gap-2">
+                <Briefcase size={16} style={{ color: '#FBBF24' }} /> Latest Opportunities
               </h2>
-              <Link
-                href="/jobs"
-                className="flex items-center gap-1 text-xs font-medium transition-colors"
-                style={{ color: 'var(--color-primary-light)' }}
-              >
-                View all <ArrowRight size={12} />
-              </Link>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Verified internships, placements & hackathons</p>
             </div>
-
-            <div className="space-y-3">
-              {loading
-                ? Array(3).fill(0).map((_, i) => (
-                  <div key={i} className="p-4 rounded-xl space-y-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)' }}>
-                    <div className="skeleton h-4 w-3/4" />
-                    <div className="skeleton h-3 w-1/2" />
-                  </div>
-                ))
-                : recentJobs.length === 0
-                  ? (
-                    <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>No opportunities yet.</p>
-                  )
-                  : recentJobs.map((job) => (
-                    <Link
-                      key={job._id}
-                      href={`/jobs/${job._id}`}
-                      className="flex items-start gap-3 p-4 rounded-xl transition-all group"
-                      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.06)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
-                    >
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 text-white"
-                        style={{ background: 'var(--gradient-primary)' }}
-                      >
-                        {job.company?.[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{job.title}</p>
-                        <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{job.company}</p>
-                      </div>
-                      <span
-                        className="px-2 py-0.5 rounded text-[10px] font-semibold flex-shrink-0"
-                        style={
-                          job.type === 'placement'
-                            ? { background: 'rgba(99,102,241,0.15)',  color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)'  }
-                            : job.type === 'internship'
-                            ? { background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }
-                            : { background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }
-                        }
-                      >
-                        {job.type}
-                      </span>
-                    </Link>
-                  ))
-              }
-            </div>
-          </motion.div>
-        )}
-
-        {/* Recent Announcements */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="glass-card p-6"
-        >
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-              <Bell size={18} style={{ color: '#f59e0b' }} />
-              Announcements
-            </h2>
-            <Link
-              href="/announcements"
-              className="flex items-center gap-1 text-xs font-medium transition-colors"
-              style={{ color: 'var(--color-primary-light)' }}
-            >
-              View all <ArrowRight size={12} />
+            <Link href="/opportunities" className="text-xs font-semibold flex items-center gap-1 hover:underline"
+              style={{ color: '#FBBF24' }}>
+              View all <ArrowRight size={11} />
             </Link>
           </div>
 
-          <div className="space-y-3">
-            {loading
-              ? Array(3).fill(0).map((_, i) => (
-                <div key={i} className="p-4 rounded-xl space-y-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)' }}>
-                  <div className="skeleton h-4 w-3/4" />
-                  <div className="skeleton h-3 w-full" />
-                </div>
-              ))
-              : recentAnnouncements.length === 0
-                ? (
-                  <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>No announcements yet.</p>
-                )
-                : recentAnnouncements.map((ann) => (
-                  <div
-                    key={ann._id}
-                    className="p-4 rounded-xl"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)' }}
-                  >
-                    <div className="flex items-start gap-2 mb-2">
-                      {ann.isPinned && <Star size={13} className="mt-0.5 flex-shrink-0" style={{ color: '#f59e0b', fill: '#f59e0b' }} />}
-                      <p className="font-semibold text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{ann.title}</p>
-                      <span
-                        className="ml-auto flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold"
-                        style={
-                          ann.type === 'urgent'
-                            ? { background: 'rgba(239,68,68,0.15)',  color: '#f87171', border: '1px solid rgba(239,68,68,0.25)'  }
-                            : { background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)' }
-                        }
-                      >
-                        {ann.type}
-                      </span>
-                    </div>
-                    <p className="text-xs line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{ann.content}</p>
-                    <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                      {new Date(ann.createdAt).toLocaleDateString()}
-                    </p>
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => <div key={i} className="h-12 rounded-lg animate-pulse bg-slate-800/50" />)}
+            </div>
+          ) : recentOpportunities.length === 0 ? (
+            <div className="text-center py-8 text-xs text-slate-500">No active opportunities posted yet</div>
+          ) : (
+            <div className="space-y-2.5">
+              {recentOpportunities.map((opp) => (
+                <div key={opp._id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/50 border border-white/[0.04]">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(245,158,11,0.12)' }}>
+                    <Briefcase size={14} style={{ color: '#FBBF24' }} />
                   </div>
-                ))
-            }
-          </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-xs truncate text-slate-200">{opp.title}</p>
+                    <p className="text-[11px] truncate text-slate-400">{opp.company} · <span className="capitalize">{opp.type}</span></p>
+                  </div>
+                  {opp.isVerified && (
+                    <span className="saas-badge saas-badge-emerald flex-shrink-0">
+                      <CheckCircle2 size={10} /> Verified
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
+        {/* Campus Announcements */}
+        <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 }}
+          className="saas-card p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold flex items-center gap-2">
+                <Newspaper size={16} style={{ color: '#818CF8' }} /> Campus Announcements
+              </h2>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Official university notices & updates</p>
+            </div>
+            <Link href="/feed" className="text-xs font-semibold flex items-center gap-1 hover:underline"
+              style={{ color: '#818CF8' }}>
+              View feed <ArrowRight size={11} />
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => <div key={i} className="h-12 rounded-lg animate-pulse bg-slate-800/50" />)}
+            </div>
+          ) : recentAnnouncements.length === 0 ? (
+            <div className="text-center py-8 text-xs text-slate-500">No announcements yet</div>
+          ) : (
+            <div className="space-y-2.5">
+              {recentAnnouncements.map((ann) => (
+                <div key={ann._id} className="flex items-start gap-2.5 p-3 rounded-lg bg-slate-900/50 border border-white/[0.04]">
+                  {ann.isPinned && <div className="w-1 h-full min-h-[32px] rounded-full bg-amber-500 flex-shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-xs truncate text-slate-200">{ann.title}</p>
+                    <p className="text-[11px] truncate text-slate-400 mt-0.5">{ann.content}</p>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      {ann.postedBy?.name} · {new Date(ann.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
       </div>
+
+      {/* ─── Bottom Feature Navigation Grid ───────────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
+        <h2 className="text-sm font-bold uppercase tracking-wider mb-3 text-slate-400">Campus Ecosystem Modules</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {featureCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Link key={card.id} href={card.href} className="block group">
+                <div className="saas-card p-4 transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+                      style={{ background: `${card.color}15`, border: `1px solid ${card.color}30` }}>
+                      <Icon size={16} style={{ color: card.color }} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-xs text-white group-hover:text-indigo-400 transition-colors">{card.title}</p>
+                      <p className="text-[11px] text-slate-400">{card.subtitle}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded font-semibold flex-shrink-0"
+                    style={{ background: `${card.color}15`, color: card.color }}>
+                    {card.statLabel}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </motion.div>
     </div>
   );
 }
+

@@ -119,16 +119,25 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="glass-card overflow-hidden" style={{ height: 'calc(100vh - 140px)' }}>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Communication</span>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2">
+          <MessageSquare size={26} className="text-indigo-400" /> Messages
+        </h1>
+        <p className="text-xs text-slate-400 mt-1">Real-time direct messaging with peers and campus community.</p>
+      </div>
+
+      <div className="saas-card overflow-hidden p-0" style={{ height: 'calc(100vh - 220px)' }}>
         <div className="flex h-full">
           {/* Sidebar — conversations */}
           <div className={`w-full md:w-80 border-r flex flex-col ${activeUser ? 'hidden md:flex' : 'flex'}`}
             style={{ borderColor: 'var(--border-glass)' }}>
             <div className="p-4 border-b" style={{ borderColor: 'var(--border-glass)' }}>
-              <h2 className="font-bold mb-3 flex items-center gap-2">
-                <MessageSquare size={18} style={{ color: 'var(--color-primary)' }} />
-                Messages
+              <h2 className="font-bold mb-3 text-sm text-slate-200 flex items-center gap-2">
+                <MessageSquare size={16} style={{ color: 'var(--color-primary)' }} />
+                Conversations
               </h2>
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />

@@ -10,23 +10,17 @@ const connectDB = require('./src/config/db');
 const errorHandler = require('./src/middleware/errorHandler');
 const initializeSocket = require('./src/socket/socketHandler');
 
-// Route imports
+// Route imports — CampusGrid core routes only
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const resourceRoutes = require('./src/routes/resourceRoutes');
-const jobRoutes = require('./src/routes/jobRoutes');
 const chatRoutes = require('./src/routes/chatRoutes');
 const lostFoundRoutes = require('./src/routes/lostFoundRoutes');
 const contentRoutes = require('./src/routes/contentRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
-// New feature routes
-const timetableRoutes = require('./src/routes/timetableRoutes');
-const attendanceRoutes = require('./src/routes/attendanceRoutes');
-const gradesRoutes = require('./src/routes/gradesRoutes');
-const assignmentsRoutes = require('./src/routes/assignmentsRoutes');
-const studyGroupsRoutes = require('./src/routes/studyGroupsRoutes');
-const eventsRoutes = require('./src/routes/eventsRoutes');
-const leaderboardRoutes = require('./src/routes/leaderboardRoutes');
+const opportunityRoutes = require('./src/routes/opportunityRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
+const aiRoutes = require('./src/routes/aiRoutes');
 
 // ─── App Setup ─────────────────────────────────────────────────────────────────
 const app = express();
@@ -62,19 +56,13 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/resources', resourceRoutes);
-app.use('/api/jobs', jobRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/lostfound', lostFoundRoutes);
-app.use('/api', contentRoutes);
+app.use('/api', contentRoutes);           // /api/announcements, /api/feed
 app.use('/api/admin', adminRoutes);
-// New feature routes
-app.use('/api/timetable', timetableRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/grades', gradesRoutes);
-app.use('/api/assignments', assignmentsRoutes);
-app.use('/api/studygroups', studyGroupsRoutes);
-app.use('/api/events', eventsRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/opportunities', opportunityRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

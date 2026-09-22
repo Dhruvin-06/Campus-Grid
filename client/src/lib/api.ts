@@ -49,8 +49,9 @@ export const authApi = {
   googleComplete: (data: any) => api.post('/auth/google/complete', data),
 };
 
-// ─── Users ─────────────────────────────────────────────────────────────────────
+// ─── Users & Peer Network ──────────────────────────────────────────────────────
 export const usersApi = {
+  getStats: () => api.get('/users/stats'),
   getAll: (params?: any) => api.get('/users', { params }),
   getById: (id: any) => api.get(`/users/${id}`),
   getPeerMatches: () => api.get('/users/peer-match'),
@@ -62,7 +63,7 @@ export const usersApi = {
   updateAvatar: (formData: any) => api.put('/users/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
-// ─── Resources ─────────────────────────────────────────────────────────────────
+// ─── Learning Hub — Resources ──────────────────────────────────────────────────
 export const resourcesApi = {
   getAll: (params?: any) => api.get('/resources', { params }),
   getById: (id: any) => api.get(`/resources/${id}`),
@@ -74,18 +75,26 @@ export const resourcesApi = {
   delete: (id: any) => api.delete(`/resources/${id}`),
 };
 
-// ─── Jobs ──────────────────────────────────────────────────────────────────────
-export const jobsApi = {
-  getAll: (params?: any) => api.get('/jobs', { params }),
-  getById: (id: any) => api.get(`/jobs/${id}`),
-  getBookmarks: () => api.get('/jobs/bookmarks'),
-  create: (data: any) => api.post('/jobs', data),
-  update: (id: any, data: any) => api.put(`/jobs/${id}`, data),
-  bookmark: (id: any) => api.put(`/jobs/${id}/bookmark`),
-  delete: (id: any) => api.delete(`/jobs/${id}`),
+// ─── AI Document Assistant ─────────────────────────────────────────────────────
+export const aiApi = {
+  ask: (data: { question: string; resourceId?: string; subject?: string; branch?: string }) =>
+    api.post('/ai/ask', data),
+  suggest: (resourceId: string) => api.post('/ai/suggest', { resourceId }),
 };
 
-// ─── Chat ──────────────────────────────────────────────────────────────────────
+// ─── Career Opportunities ──────────────────────────────────────────────────────
+export const opportunitiesApi = {
+  getAll: (params?: any) => api.get('/opportunities', { params }),
+  getById: (id: any) => api.get(`/opportunities/${id}`),
+  getAllAdmin: (params?: any) => api.get('/opportunities/admin/all', { params }),
+  create: (data: any) => api.post('/opportunities', data),
+  update: (id: any, data: any) => api.put(`/opportunities/${id}`, data),
+  verify: (id: any, action: 'verify' | 'reject') => api.put(`/opportunities/${id}/verify`, { action }),
+  delete: (id: any) => api.delete(`/opportunities/${id}`),
+  save: (id: any) => api.put(`/opportunities/${id}/save`),
+};
+
+// ─── Real-time Chat ────────────────────────────────────────────────────────────
 export const chatApi = {
   getConversations: () => api.get('/chat/conversations'),
   getConversation: (userId: any, params?: any) => api.get(`/chat/${userId}`, { params }),
@@ -93,98 +102,51 @@ export const chatApi = {
   getUnreadCount: () => api.get('/chat/unread-count'),
 };
 
-// ─── Announcements & Blogs ─────────────────────────────────────────────────────
+// ─── Campus Feed & Announcements ───────────────────────────────────────────────
 export const contentApi = {
+  // Announcements (admin/faculty/placement)
   getAnnouncements: (params?: any) => api.get('/announcements', { params }),
   createAnnouncement: (data: any) => api.post('/announcements', data),
+  updateAnnouncement: (id: any, data: any) => api.put(`/announcements/${id}`, data),
   deleteAnnouncement: (id: any) => api.delete(`/announcements/${id}`),
-  getBlogs: (params?: any) => api.get('/blogs', { params }),
-  getPendingBlogs: () => api.get('/blogs/pending'),
-  createBlog: (formData: any) => api.post('/blogs', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  likeBlog: (id: any) => api.put(`/blogs/${id}/like`),
-  commentBlog: (id: any, content: any) => api.post(`/blogs/${id}/comment`, { content }),
-  approveBlog: (id: any) => api.put(`/blogs/${id}/approve`),
+  // Campus Feed (all users, moderated)
+  getFeed: (params?: any) => api.get('/feed', { params }),
+  getPendingPosts: () => api.get('/feed/pending'),
+  createPost: (formData: any) => api.post('/feed', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updatePost: (id: any, data: any) => api.put(`/feed/${id}`, data),
+  likePost: (id: any) => api.put(`/feed/${id}/like`),
+  commentPost: (id: any, content: any) => api.post(`/feed/${id}/comment`, { content }),
+  approvePost: (id: any, action: 'approve' | 'reject') => api.put(`/feed/${id}/approve`, { action }),
+  deletePost: (id: any) => api.delete(`/feed/${id}`),
 };
 
-// ─── Lost & Found ──────────────────────────────────────────────────────────────
+// ─── Campus Lost & Found ───────────────────────────────────────────────────────
 export const lostFoundApi = {
   getAll: (params?: any) => api.get('/lostfound', { params }),
   create: (formData: any) => api.post('/lostfound', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   resolve: (id: any, data: any) => api.put(`/lostfound/${id}/resolve`, data),
+  claim: (id: any, data?: any) => api.put(`/lostfound/${id}/claim`, data),
   delete: (id: any) => api.delete(`/lostfound/${id}`),
 };
 
-// ─── Admin ─────────────────────────────────────────────────────────────────────
+// ─── Notifications ─────────────────────────────────────────────────────────────
+export const notificationsApi = {
+  getAll: (params?: any) => api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markRead: (notifId: string) => api.put(`/notifications/${notifId}/read`),
+  markAllRead: () => api.put('/notifications/read-all'),
+  delete: (notifId: string) => api.delete(`/notifications/${notifId}`),
+  clearAll: () => api.delete('/notifications'),
+};
+
+// ─── Admin Console ─────────────────────────────────────────────────────────────
 export const adminApi = {
   getAnalytics: () => api.get('/admin/analytics'),
   getUsers: (params?: any) => api.get('/admin/users', { params }),
   getAuditLog: (params?: any) => api.get('/admin/audit-log', { params }),
-  getPlacementReport: () => api.get('/admin/placement-report'),
   broadcast: (data: any) => api.post('/admin/broadcast', data),
-  // Events (admin)
-  getAdminEvents: () => api.get('/admin/events'),
-  createAdminEvent: (data: any) => api.post('/admin/events', data),
-  updateAdminEvent: (id: any, data: any) => api.put(`/admin/events/${id}`, data),
-  deleteAdminEvent: (id: any) => api.delete(`/admin/events/${id}`),
-};
-
-// ─── Timetable ─────────────────────────────────────────────────────────────────
-export const timetableApi = {
-  get: () => api.get('/timetable'),
-  addSlot: (data: any) => api.post('/timetable/slots', data),
-  updateSlot: (slotId: any, data: any) => api.put(`/timetable/slots/${slotId}`, data),
-  deleteSlot: (slotId: any) => api.delete(`/timetable/slots/${slotId}`),
-  updateSemester: (semester: string) => api.put('/timetable/semester', { semester }),
-};
-
-// ─── Attendance ────────────────────────────────────────────────────────────────
-export const attendanceApi = {
-  get: (semester: string) => api.get('/attendance', { params: { semester } }),
-  addSubject: (data: any) => api.post('/attendance/subjects', data),
-  logAttendance: (subjectId: any, data: any) => api.post(`/attendance/subjects/${subjectId}/log`, data),
-  removeSubject: (subjectId: any, semester: string) => api.delete(`/attendance/subjects/${subjectId}`, { params: { semester } }),
-  deleteRecord: (subjectId: any, recordId: any, semester: string) =>
-    api.delete(`/attendance/subjects/${subjectId}/log/${recordId}`, { params: { semester } }),
-};
-
-// ─── Grades ────────────────────────────────────────────────────────────────────
-export const gradesApi = {
-  getAll: () => api.get('/grades'),
-  getSemester: (semester: string) => api.get(`/grades/${encodeURIComponent(semester)}`),
-  upsert: (data: any) => api.post('/grades', data),
-  deleteSemester: (semester: string) => api.delete(`/grades/${encodeURIComponent(semester)}`),
-};
-
-// ─── Assignments ───────────────────────────────────────────────────────────────
-export const assignmentsApi = {
-  getAll: (params?: any) => api.get('/assignments', { params }),
-  getStats: () => api.get('/assignments/stats'),
-  create: (data: any) => api.post('/assignments', data),
-  update: (id: any, data: any) => api.put(`/assignments/${id}`, data),
-  delete: (id: any) => api.delete(`/assignments/${id}`),
-};
-
-// ─── Study Groups ──────────────────────────────────────────────────────────────
-export const studyGroupsApi = {
-  getAll: (params?: any) => api.get('/studygroups', { params }),
-  getMine: () => api.get('/studygroups/mine'),
-  create: (data: any) => api.post('/studygroups', data),
-  join: (id: any) => api.post(`/studygroups/${id}/join`),
-  leave: (id: any) => api.delete(`/studygroups/${id}/leave`),
-  delete: (id: any) => api.delete(`/studygroups/${id}`),
-};
-
-// ─── Events ────────────────────────────────────────────────────────────────────
-export const eventsApi = {
-  getAll: (params?: any) => api.get('/events', { params }),
-  getById: (id: any) => api.get(`/events/${id}`),
-  rsvp: (id: any) => api.post(`/events/${id}/rsvp`),
-};
-
-// ─── Leaderboard ───────────────────────────────────────────────────────────────
-export const leaderboardApi = {
-  get: (params?: any) => api.get('/leaderboard', { params }),
+  reviewResource: (id: string, action: 'approve' | 'reject') => api.put(`/admin/resources/${id}/review`, { action }),
+  updateUser: (id: string, data: { role?: string; isActive?: boolean }) => api.put(`/admin/users/${id}`, data),
 };
 
 export default api;
-

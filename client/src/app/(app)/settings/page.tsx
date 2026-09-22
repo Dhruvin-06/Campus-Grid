@@ -159,11 +159,12 @@ export default function SettingsPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Shield size={26} style={{ color: 'var(--color-primary)' }} /> Settings
+        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">System Preferences</span>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2">
+          <Shield size={26} className="text-indigo-400" /> Settings
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-          Manage your account, security and preferences
+        <p className="text-xs text-slate-400 mt-1">
+          Manage your account profile, security preferences, and notifications.
         </p>
       </div>
 
@@ -171,7 +172,7 @@ export default function SettingsPage() {
 
         {/* ── Sidebar Tabs ── */}
         <div className="md:w-52 flex-shrink-0">
-          <div className="glass-card p-2 space-y-1">
+          <div className="saas-card p-2 space-y-1">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} id={`settings-tab-${id}`} onClick={() => setTab(id)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-all"
@@ -454,7 +455,6 @@ export default function SettingsPage() {
                     </h2>
                     {[
                       { key: 'emailAnnouncements', label: 'Announcements', desc: 'Campus announcements and news' },
-                      { key: 'emailJobs',          label: 'Job Alerts',    desc: 'New placement & internship opportunities' },
                       { key: 'emailMessages',      label: 'Messages',      desc: 'When you receive a new message' },
                       { key: 'browserNotifications', label: 'Browser Push', desc: 'Real-time browser notifications' },
                     ].map(({ key, label, desc }) => (

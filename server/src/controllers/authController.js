@@ -7,7 +7,7 @@ const { OAuth2Client } = require('google-auth-library');
 // @route   POST /api/auth/register
 // @access  Public
 const register = asyncHandler(async (req, res) => {
-  const { name, email, rollNumber, password, role, branch, year } = req.body;
+  const { name, email, rollNumber, password, branch, year } = req.body;
 
   // Check if user already exists
   const existingUser = await User.findOne({ $or: [{ email }, { rollNumber }] });
@@ -18,17 +18,17 @@ const register = asyncHandler(async (req, res) => {
     );
   }
 
-  // Create user (admin roles require manual verification)
+  // 🔴 SECURITY: Public registration ALWAYS creates a student.
+  // Role escalation is only possible via admin action: PUT /api/users/:id/role
   const user = await User.create({
     name,
     email,
     rollNumber,
     password,
-    role: role || 'student',
+    role: 'student',
     branch,
     year,
-    // Admin/faculty accounts start unverified until admin approves
-    isVerified: role === 'student' ? true : false,
+    isVerified: true,
   });
 
   sendTokenResponse(user, 201, res);
@@ -73,13 +73,16 @@ const getMe = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/profile
 // @access  Private
 const updateProfile = asyncHandler(async (req, res) => {
-  const { name, bio, skills, interests, linkedIn, github, year, branch } = req.body;
+  const { name, bio, skills, interests, technicalInterests, projectInterests, collaborationPrefs, linkedIn, github, year, branch } = req.body;
 
   const updatedFields = {};
   if (name) updatedFields.name = name;
   if (bio !== undefined) updatedFields.bio = bio;
   if (skills) updatedFields.skills = skills;
   if (interests) updatedFields.interests = interests;
+  if (technicalInterests) updatedFields.technicalInterests = technicalInterests;
+  if (projectInterests) updatedFields.projectInterests = projectInterests;
+  if (collaborationPrefs !== undefined) updatedFields.collaborationPrefs = collaborationPrefs;
   if (linkedIn !== undefined) updatedFields.linkedIn = linkedIn;
   if (github !== undefined) updatedFields.github = github;
   if (year) updatedFields.year = year;

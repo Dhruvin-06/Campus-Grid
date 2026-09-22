@@ -55,12 +55,12 @@ export default function PeersPage() {
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Users size={26} style={{ color: 'var(--color-success)' }} />
+        <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <Users size={28} className="text-emerald-400" />
           Peer Network
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-          Students matched based on your skills and interests
+        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+          Find students with complementary skills and interests.
         </p>
       </div>
 

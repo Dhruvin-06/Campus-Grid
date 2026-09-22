@@ -1,23 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const {
-  createAnnouncement, getAnnouncements, deleteAnnouncement,
-  createBlog, getBlogs, likeBlog, commentOnBlog, approveBlog, getPendingBlogs,
+  createAnnouncement, getAnnouncements, updateAnnouncement, deleteAnnouncement,
+  createCampusPost, getCampusPosts, updateCampusPost, likeCampusPost, commentOnCampusPost,
+  approveCampusPost, getPendingCampusPosts, deleteCampusPost,
 } = require('../controllers/announcementController');
-const { protect, authorize, adminOnly } = require('../middleware/auth');
+const { protect, staffOnly, staffAndPlacement } = require('../middleware/auth');
 const { uploadImage } = require('../config/upload');
 
-// Announcements
+// ─── Announcements (admin/faculty/placement post; all read) ────────────────────
 router.get('/announcements', protect, getAnnouncements);
-router.post('/announcements', protect, authorize('admin', 'faculty'), createAnnouncement);
-router.delete('/announcements/:id', protect, adminOnly, deleteAnnouncement);
+router.post('/announcements', protect, staffAndPlacement, createAnnouncement);
+router.put('/announcements/:id', protect, staffAndPlacement, updateAnnouncement);
+router.delete('/announcements/:id', protect, staffAndPlacement, deleteAnnouncement);
 
-// Blogs
-router.get('/blogs', protect, getBlogs);
-router.get('/blogs/pending', protect, authorize('admin', 'faculty'), getPendingBlogs);
-router.post('/blogs', protect, uploadImage.single('coverImage'), createBlog);
-router.put('/blogs/:id/like', protect, likeBlog);
-router.post('/blogs/:id/comment', protect, commentOnBlog);
-router.put('/blogs/:id/approve', protect, authorize('admin', 'faculty'), approveBlog);
+// ─── Campus Feed (student posts go to approval; admin/faculty auto-publish) ────
+router.get('/feed', protect, getCampusPosts);
+router.get('/feed/pending', protect, staffOnly, getPendingCampusPosts);
+router.post('/feed', protect, uploadImage.single('coverImage'), createCampusPost);
+router.put('/feed/:id', protect, updateCampusPost);
+router.put('/feed/:id/like', protect, likeCampusPost);
+router.post('/feed/:id/comment', protect, commentOnCampusPost);
+router.put('/feed/:id/approve', protect, staffOnly, approveCampusPost);
+router.delete('/feed/:id', protect, deleteCampusPost);
 
 module.exports = router;
+

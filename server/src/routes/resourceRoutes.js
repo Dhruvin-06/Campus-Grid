@@ -4,18 +4,17 @@ const {
   uploadResource, getResources, getResourceById, trackDownload,
   likeResource, approveResource, deleteResource, getPendingResources,
 } = require('../controllers/resourceController');
-const { protect, adminOnly, authorize } = require('../middleware/auth');
+const { protect, staffOnly } = require('../middleware/auth');
 const { uploadDocument } = require('../config/upload');
 
-const staffOnly = authorize('admin', 'faculty');
-
 router.get('/', protect, getResources);
-router.get('/pending', protect, adminOnly, getPendingResources);
+router.get('/pending', protect, staffOnly, getPendingResources);
 router.get('/:id', protect, getResourceById);
-router.post('/', protect, uploadDocument.single('file'), uploadResource);  // students can upload (pending approval)
+router.post('/', protect, uploadDocument.single('file'), uploadResource);
 router.put('/:id/download', protect, trackDownload);
 router.put('/:id/like', protect, likeResource);
-router.put('/:id/approve', protect, adminOnly, approveResource);
-router.delete('/:id', protect, staffOnly, deleteResource);  // only staff can delete
+router.put('/:id/approve', protect, staffOnly, approveResource);
+router.delete('/:id', protect, deleteResource);
 
 module.exports = router;
+

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  createPost, getPosts, resolvePost, deletePost,
+  createPost, getPosts, resolvePost, deletePost, claimPost,
 } = require('../controllers/lostFoundController');
 const { protect } = require('../middleware/auth');
 const { uploadImage } = require('../config/upload');
@@ -9,6 +9,7 @@ const { uploadImage } = require('../config/upload');
 router.get('/', protect, getPosts);
 router.post('/', protect, uploadImage.single('image'), createPost);
 router.put('/:id/resolve', protect, resolvePost);
+router.put('/:id/claim', protect, claimPost);
 router.delete('/:id', protect, deletePost);
 
 module.exports = router;

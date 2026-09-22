@@ -6,9 +6,10 @@ import { resourcesApi } from '@/lib/api';
 import { Resource } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import Modal from '@/components/Modal';
 import {
-  BookOpen, Upload, Search, Download, Heart, Eye, Filter,
-  FileText, X, Plus, ChevronDown,
+  BookOpen, Search, Filter, Upload, Download, Eye,
+  ThumbsUp, CheckCircle, Clock, FileText, X, AlertCircle, Plus, Heart,
 } from 'lucide-react';
 
 const BRANCHES = ['All', 'CSE', 'ECE', 'ME', 'CE', 'EEE', 'IT', 'AIDS', 'AIML', 'Other'];
@@ -80,7 +81,8 @@ export default function ResourcesPage() {
       if (uploadForm.tags) fd.append('tags', uploadForm.tags);
 
       await resourcesApi.upload(fd);
-      toast.success('Resource uploaded! It will be visible after approval.');
+      const isStaff = user?.role === 'admin' || user?.role === 'faculty';
+      toast.success(isStaff ? 'Resource uploaded and published!' : 'Resource submitted! It will be visible after approval.');
       setShowUpload(false);
       fetchResources();
     } catch (err: any) {
@@ -114,33 +116,32 @@ export default function ResourcesPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <BookOpen size={26} style={{ color: 'var(--color-primary)' }} />
-            Resource Vault
+          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2.5 text-white">
+            <BookOpen size={28} className="text-indigo-400" />
+            Learning Hub
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-            {total} resources available · Notes, PYQs, Assignments & more
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            Your verified academic knowledge base · {total} resources available
           </p>
         </div>
         {canUpload ? (
           <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Upload
+            <Plus size={16} /> Upload Resource
           </button>
         ) : (
-          <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2"
-            style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}>
+          <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
             <Plus size={16} /> Submit Resource
           </button>
         )}
       </div>
 
       {/* Search + Filters */}
-      <div className="glass-card p-4">
+      <div className="saas-card p-4">
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-            <input id="resource-search" type="text" placeholder="Search by title, subject, tags..."
-              className="input-field pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input id="resource-search" type="text" placeholder="Search notes, PDFs, previous papers..."
+              className="w-full pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <select id="resource-branch-filter" className="input-field w-auto" value={branch} onChange={(e) => setBranch(e.target.value)}>
             {BRANCHES.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -240,93 +241,78 @@ export default function ResourcesPage() {
       )}
 
       {/* Upload Modal */}
-      {showUpload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <Upload size={20} style={{ color: 'var(--color-primary)' }} />
-                {canUpload ? 'Upload Resource' : 'Submit Resource for Review'}
-              </h2>
-              <button onClick={() => setShowUpload(false)}><X size={20} style={{ color: 'var(--text-muted)' }} /></button>
-            </div>
-            {!canUpload && (
-              <div className="mb-4 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}>
-                📋 Your submission will be reviewed by admin before it goes live.
-              </div>
-            )}
+      <Modal isOpen={showUpload} onClose={() => setShowUpload(false)} title={canUpload ? 'Upload Resource' : 'Submit Resource for Review'} maxWidth="max-w-lg">
+        {!canUpload && (
+          <div className="mb-4 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}>
+            📋 Your submission will be reviewed by admin before it goes live.
+          </div>
+        )}
 
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Title *</label>
-                <input id="upload-title" type="text" required placeholder="e.g. Data Structures - Unit 3 Notes" className="input-field"
-                  value={uploadForm.title} onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Subject *</label>
-                  <input id="upload-subject" type="text" required placeholder="e.g. Data Structures" className="input-field"
-                    value={uploadForm.subject} onChange={(e) => setUploadForm({ ...uploadForm, subject: e.target.value })} />
+        <form onSubmit={handleUpload} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Title *</label>
+            <input id="upload-title" type="text" required placeholder="e.g. Data Structures - Unit 3 Notes" className="input-field"
+              value={uploadForm.title} onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Subject *</label>
+              <input id="upload-subject" type="text" required placeholder="e.g. Data Structures" className="input-field"
+                value={uploadForm.subject} onChange={(e) => setUploadForm({ ...uploadForm, subject: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Type</label>
+              <select id="upload-type" className="input-field" value={uploadForm.type}
+                onChange={(e) => setUploadForm({ ...uploadForm, type: e.target.value })}>
+                {TYPES.slice(1).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Branch</label>
+              <select id="upload-branch" className="input-field" value={uploadForm.branch}
+                onChange={(e) => setUploadForm({ ...uploadForm, branch: e.target.value })}>
+                {BRANCHES.slice(1).map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Year</label>
+              <select id="upload-year" className="input-field" value={uploadForm.year}
+                onChange={(e) => setUploadForm({ ...uploadForm, year: e.target.value })}>
+                <option value="">All Years</option>
+                {[1, 2, 3, 4].map((y) => <option key={y} value={y}>Year {y}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tags (comma-separated)</label>
+            <input id="upload-tags" type="text" placeholder="e.g. trees, sorting, graphs" className="input-field"
+              value={uploadForm.tags} onChange={(e) => setUploadForm({ ...uploadForm, tags: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>File * (PDF, DOC, PPT — max 25MB)</label>
+            <div className="border-2 border-dashed rounded-xl p-6 text-center transition-colors"
+              style={{ borderColor: uploadForm.file ? 'var(--color-success)' : 'var(--border-glass)' }}>
+              <input id="upload-file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+                className="hidden" onChange={(e) => setUploadForm({ ...uploadForm, file: e.target.files?.[0] || null })} />
+              {uploadForm.file ? (
+                <div className="text-sm" style={{ color: 'var(--color-success)' }}>
+                  ✅ {uploadForm.file.name} ({(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB)
                 </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Type</label>
-                  <select id="upload-type" className="input-field" value={uploadForm.type}
-                    onChange={(e) => setUploadForm({ ...uploadForm, type: e.target.value })}>
-                    {TYPES.slice(1).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Branch</label>
-                  <select id="upload-branch" className="input-field" value={uploadForm.branch}
-                    onChange={(e) => setUploadForm({ ...uploadForm, branch: e.target.value })}>
-                    {BRANCHES.slice(1).map((b) => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Year</label>
-                  <select id="upload-year" className="input-field" value={uploadForm.year}
-                    onChange={(e) => setUploadForm({ ...uploadForm, year: e.target.value })}>
-                    <option value="">All Years</option>
-                    {[1, 2, 3, 4].map((y) => <option key={y} value={y}>Year {y}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tags (comma-separated)</label>
-                <input id="upload-tags" type="text" placeholder="e.g. trees, sorting, graphs" className="input-field"
-                  value={uploadForm.tags} onChange={(e) => setUploadForm({ ...uploadForm, tags: e.target.value })} />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>File * (PDF, DOC, PPT — max 25MB)</label>
-                <div className="border-2 border-dashed rounded-xl p-6 text-center transition-colors"
-                  style={{ borderColor: uploadForm.file ? 'var(--color-success)' : 'var(--border-glass)' }}>
-                  <input id="upload-file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
-                    className="hidden" onChange={(e) => setUploadForm({ ...uploadForm, file: e.target.files?.[0] || null })} />
-                  {uploadForm.file ? (
-                    <div className="text-sm" style={{ color: 'var(--color-success)' }}>
-                      ✅ {uploadForm.file.name} ({(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB)
-                    </div>
-                  ) : (
-                    <label htmlFor="upload-file" className="cursor-pointer">
-                      <Upload size={28} className="mx-auto mb-2 opacity-40" />
-                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Click to select a file</p>
-                    </label>
-                  )}
-                </div>
-              </div>
-              <button id="upload-submit" type="submit" disabled={uploading} className="btn-primary w-full flex items-center justify-center gap-2">
-                {uploading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Upload Resource'}
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
+              ) : (
+                <label htmlFor="upload-file" className="cursor-pointer">
+                  <Upload size={28} className="mx-auto mb-2 opacity-40" />
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Click to select a file</p>
+                </label>
+              )}
+            </div>
+          </div>
+          <button id="upload-submit" type="submit" disabled={uploading} className="btn-primary w-full flex items-center justify-center gap-2">
+            {uploading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Upload Resource'}
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 }
