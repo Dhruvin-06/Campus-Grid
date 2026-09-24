@@ -1,0 +1,60 @@
+================================================================================
+                    CAMPUSGRID - ACTIVE USER ACCOUNTS & CREDENTIALS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. ADMIN ACCOUNTS
+--------------------------------------------------------------------------------
+Name:        Admin 1
+Email:       a1@campus.edu
+Roll Number: ADMIN001
+Role:        admin
+Password:    pass1234
+
+--------------------------------------------------------------------------------
+2. FACULTY ACCOUNTS
+--------------------------------------------------------------------------------
+Name:        Faculty 1
+Email:       f1@campus.edu
+Roll Number: FAC001
+Role:        faculty
+Password:    pass1234
+
+Name:        Faculty 2
+Email:       f2@campus.edu
+Roll Number: FAC002
+Role:        faculty
+Password:    pass1234
+
+--------------------------------------------------------------------------------
+3. PLACEMENT CELL ACCOUNTS
+--------------------------------------------------------------------------------
+Name:        Placement 1
+Email:       p1@campus.edu
+Roll Number: PLC001
+Role:        placement
+Password:    pass1234
+
+Name:        Placement 2
+Email:       p2@campus.edu
+Roll Number: PLC002
+Role:        placement
+Password:    pass1234
+
+--------------------------------------------------------------------------------
+4. STUDENT ACCOUNTS
+--------------------------------------------------------------------------------
+Name:        Student 1
+Email:       s1@campus.edu
+Roll Number: STU001
+Role:        student
+Password:    pass1234
+
+Name:        Student 2
+Email:       s2@campus.edu
+Roll Number: STU002
+Role:        student
+Password:    pass1234
+
+================================================================================
+Generated on: 2026-09-22

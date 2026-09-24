@@ -7,9 +7,11 @@ import { Resource } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import Modal from '@/components/Modal';
+import FilePreviewModal from '@/components/FilePreviewModal';
 import {
-  BookOpen, Search, Filter, Upload, Download, Eye,
-  ThumbsUp, CheckCircle, Clock, FileText, X, AlertCircle, Plus, Heart,
+  BookOpen, Search, Upload, Download, Eye,
+  Clock, FileText, Plus, Heart, Check, X,
+  ExternalLink, AlertCircle, RefreshCw, CheckCircle2,
 } from 'lucide-react';
 
 const BRANCHES = ['All', 'CSE', 'ECE', 'ME', 'CE', 'EEE', 'IT', 'AIDS', 'AIML', 'Other'];
@@ -26,19 +28,35 @@ const TYPES = [
 export default function ResourcesPage() {
   const { user } = useAuth();
   const canUpload = user?.role === 'admin' || user?.role === 'faculty';
+
+  const [activeTab, setActiveTab] = useState<'published' | 'pending'>('published');
   const [resources, setResources] = useState<Resource[]>([]);
+  const [pendingResources, setPendingResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPending, setLoadingPending] = useState(false);
   const [search, setSearch] = useState('');
   const [branch, setBranch] = useState('All');
   const [type, setType] = useState('');
   const [year, setYear] = useState('');
   const [showUpload, setShowUpload] = useState(false);
+  const [previewItem, setPreviewItem] = useState<{ id?: string; title: string; fileUrl: string; fileName?: string; subject?: string; branch?: string } | null>(null);
   const [uploadForm, setUploadForm] = useState({
     title: '', description: '', subject: '', branch: 'CSE',
     year: '', type: 'notes', tags: '', file: null as File | null,
   });
   const [uploading, setUploading] = useState(false);
   const [total, setTotal] = useState(0);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  // Check URL query for tab=pending
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'pending' && canUpload) {
+        setActiveTab('pending');
+      }
+    }
+  }, [canUpload]);
 
   const fetchResources = async () => {
     setLoading(true);
@@ -59,10 +77,29 @@ export default function ResourcesPage() {
     }
   };
 
+  const fetchPendingResources = async () => {
+    if (!canUpload) return;
+    setLoadingPending(true);
+    try {
+      const res = await resourcesApi.getPending();
+      setPendingResources(res.data.resources || []);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingPending(false);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(fetchResources, 300);
     return () => clearTimeout(timer);
   }, [search, branch, type, year]);
+
+  useEffect(() => {
+    if (canUpload) {
+      fetchPendingResources();
+    }
+  }, [canUpload]);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,11 +121,43 @@ export default function ResourcesPage() {
       const isStaff = user?.role === 'admin' || user?.role === 'faculty';
       toast.success(isStaff ? 'Resource uploaded and published!' : 'Resource submitted! It will be visible after approval.');
       setShowUpload(false);
+      setUploadForm({
+        title: '', description: '', subject: '', branch: 'CSE',
+        year: '', type: 'notes', tags: '', file: null,
+      });
       fetchResources();
+      if (canUpload) fetchPendingResources();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Upload failed');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    setActionLoadingId(id);
+    try {
+      await resourcesApi.approve(id);
+      toast.success('Resource approved & published live! 🎉');
+      setPendingResources((prev) => prev.filter((r) => r._id !== id));
+      fetchResources();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to approve resource');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    setActionLoadingId(id);
+    try {
+      await resourcesApi.delete(id);
+      toast.success('Resource rejected and removed');
+      setPendingResources((prev) => prev.filter((r) => r._id !== id));
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to reject resource');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -101,9 +170,9 @@ export default function ResourcesPage() {
     } catch { toast.error('Failed'); }
   };
 
-  const handleDownload = async (resource: Resource) => {
-    await resourcesApi.trackDownload(resource._id);
-    window.open(resource.fileUrl, '_blank');
+  const handleDownload = (resource: Resource) => {
+    const downloadUrl = resourcesApi.getDownloadUrl(resource._id);
+    window.open(downloadUrl, '_blank');
   };
 
   const typeColors: Record<string, string> = {
@@ -135,108 +204,269 @@ export default function ResourcesPage() {
         )}
       </div>
 
-      {/* Search + Filters */}
-      <div className="saas-card p-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-48">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-            <input id="resource-search" type="text" placeholder="Search notes, PDFs, previous papers..."
-              className="w-full pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <select id="resource-branch-filter" className="input-field w-auto" value={branch} onChange={(e) => setBranch(e.target.value)}>
-            {BRANCHES.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <select id="resource-type-filter" className="input-field w-auto" value={type} onChange={(e) => setType(e.target.value)}>
-            {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          <select id="resource-year-filter" className="input-field w-auto" value={year} onChange={(e) => setYear(e.target.value)}>
-            <option value="">All Years</option>
-            {[1, 2, 3, 4].map((y) => <option key={y} value={y}>Year {y}</option>)}
-          </select>
+      {/* Staff Tabs (Admin / Faculty) */}
+      {canUpload && (
+        <div className="flex items-center gap-2 border-b pb-3" style={{ borderColor: 'var(--border-subtle, rgba(255,255,255,0.08))' }}>
+          <button
+            onClick={() => setActiveTab('published')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+              activeTab === 'published' ? 'text-white' : 'text-slate-400 hover:text-white'
+            }`}
+            style={{
+              background: activeTab === 'published' ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${activeTab === 'published' ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
+              color: activeTab === 'published' ? '#a5b4fc' : 'var(--text-muted)',
+            }}
+          >
+            <BookOpen size={16} /> Published Resources ({total})
+          </button>
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+              activeTab === 'pending' ? 'text-white' : 'text-slate-400 hover:text-white'
+            }`}
+            style={{
+              background: activeTab === 'pending' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${activeTab === 'pending' ? '#ef4444' : 'rgba(255,255,255,0.08)'}`,
+              color: activeTab === 'pending' ? '#f87171' : 'var(--text-muted)',
+            }}
+          >
+            <Clock size={16} /> Pending Approvals
+            {pendingResources.length > 0 && (
+              <span className="px-2 py-0.5 text-xs rounded-full bg-red-500 text-white font-bold animate-pulse">
+                {pendingResources.length}
+              </span>
+            )}
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Resources Grid */}
-      {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array(8).fill(0).map((_, i) => (
-            <div key={i} className="glass-card p-5 space-y-3">
-              <div className="skeleton h-5 w-3/4" />
-              <div className="skeleton h-4 w-full" />
-              <div className="skeleton h-4 w-1/2" />
+      {/* PUBLISHED TAB */}
+      {activeTab === 'published' && (
+        <>
+          {/* Search + Filters */}
+          <div className="saas-card p-4">
+            <div className="flex flex-wrap gap-3">
+              <div className="relative flex-1 min-w-48">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                <input id="resource-search" type="text" placeholder="Search notes, PDFs, previous papers..."
+                  className="w-full pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              <select id="resource-branch-filter" className="input-field w-auto" value={branch} onChange={(e) => setBranch(e.target.value)}>
+                {BRANCHES.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+              <select id="resource-type-filter" className="input-field w-auto" value={type} onChange={(e) => setType(e.target.value)}>
+                {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+              <select id="resource-year-filter" className="input-field w-auto" value={year} onChange={(e) => setYear(e.target.value)}>
+                <option value="">All Years</option>
+                {[1, 2, 3, 4].map((y) => <option key={y} value={y}>Year {y}</option>)}
+              </select>
             </div>
-          ))}
-        </div>
-      ) : resources.length === 0 ? (
-        <div className="glass-card p-16 text-center">
-          <BookOpen size={48} className="mx-auto mb-4 opacity-20" />
-          <p className="font-semibold">No resources found</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Try adjusting your filters or upload the first one!</p>
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {resources.map((resource, i) => (
-            <motion.div
-              key={resource._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="glass-card p-5 flex flex-col gap-3"
-            >
-              {/* Icon + Type badge */}
-              <div className="flex items-start justify-between">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center"
-                  style={{ background: 'rgba(99,102,241,0.15)' }}>
-                  <FileText size={22} style={{ color: 'var(--color-primary)' }} />
+          </div>
+
+          {/* Resources Grid */}
+          {loading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array(8).fill(0).map((_, i) => (
+                <div key={i} className="glass-card p-5 space-y-3">
+                  <div className="skeleton h-5 w-3/4" />
+                  <div className="skeleton h-4 w-full" />
+                  <div className="skeleton h-4 w-1/2" />
                 </div>
-                <span className={`badge ${typeColors[resource.type] || 'badge-primary'}`}>
-                  {resource.type.replace('_', ' ')}
-                </span>
-              </div>
-
-              {/* Info */}
-              <div className="flex-1">
-                <h3 className="font-semibold text-sm line-clamp-2 mb-1">{resource.title}</h3>
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  {resource.subject} · {resource.branch}{resource.year ? ` · Y${resource.year}` : ''}
-                </p>
-                {resource.tags && resource.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {resource.tags.slice(0, 3).map((tag) => (
-                      <span key={tag} className="tag">{tag}</span>
-                    ))}
+              ))}
+            </div>
+          ) : resources.length === 0 ? (
+            <div className="glass-card p-16 text-center">
+              <BookOpen size={48} className="mx-auto mb-4 opacity-20" />
+              <p className="font-semibold">No resources found</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Try adjusting your filters or upload the first one!</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {resources.map((resource, i) => (
+                <motion.div
+                  key={resource._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="glass-card p-5 flex flex-col gap-3"
+                >
+                  {/* Icon + Type badge */}
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      style={{ background: 'rgba(99,102,241,0.15)' }}>
+                      <FileText size={22} style={{ color: 'var(--color-primary)' }} />
+                    </div>
+                    <span className={`badge ${typeColors[resource.type] || 'badge-primary'}`}>
+                      {resource.type.replace('_', ' ')}
+                    </span>
                   </div>
-                )}
-              </div>
 
-              {/* Uploader */}
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                by {typeof resource.uploadedBy === 'object' ? (resource.uploadedBy?.name || 'Anonymous') : 'Anonymous'}
+                  {/* Info */}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm line-clamp-2 mb-1">{resource.title}</h3>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      {resource.subject} · {resource.branch}{resource.year ? ` · Y${resource.year}` : ''}
+                    </p>
+                    {resource.tags && resource.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {resource.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Uploader */}
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    by {typeof resource.uploadedBy === 'object' ? (resource.uploadedBy?.name || 'Anonymous') : 'Anonymous'}
+                  </p>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-glass)' }}>
+                    <button
+                      onClick={() => setPreviewItem({
+                        id: resource._id,
+                        title: resource.title,
+                        fileUrl: resource.fileUrl,
+                        fileName: resource.fileName,
+                        subject: resource.subject,
+                        branch: resource.branch,
+                      })}
+                      className="btn-secondary py-1.5 px-2.5 text-xs flex items-center justify-center gap-1"
+                      title="Preview Document"
+                    >
+                      <Eye size={13} /> Preview
+                    </button>
+                    <button
+                      id={`download-${resource._id}`}
+                      onClick={() => handleDownload(resource)}
+                      className="btn-primary flex-1 py-1.5 text-xs flex items-center justify-center gap-1"
+                    >
+                      <Download size={13} /> Download
+                    </button>
+                    <button
+                      id={`like-${resource._id}`}
+                      onClick={() => handleLike(resource._id)}
+                      className="p-2 rounded-xl transition-colors hover:bg-white/5 flex items-center gap-1 text-xs"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      <Heart size={14} /> {resource.likes?.length || 0}
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* PENDING APPROVALS TAB (Admin / Faculty) */}
+      {activeTab === 'pending' && canUpload && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Clock size={20} className="text-amber-400" />
+                Pending Resource Submissions ({pendingResources.length})
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Review student-submitted study material before it goes live to campus.
               </p>
+            </div>
+            <button
+              onClick={fetchPendingResources}
+              className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
+            >
+              <RefreshCw size={13} className={loadingPending ? 'animate-spin' : ''} /> Refresh
+            </button>
+          </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-glass)' }}>
-                <button
-                  id={`download-${resource._id}`}
-                  onClick={() => handleDownload(resource)}
-                  className="btn-primary flex-1 py-1.5 text-xs flex items-center justify-center gap-1"
+          {loadingPending ? (
+            <div className="py-12 text-center">
+              <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-indigo-400" />
+              <p className="text-xs text-slate-400">Loading pending submissions...</p>
+            </div>
+          ) : pendingResources.length === 0 ? (
+            <div className="glass-card p-12 text-center border border-emerald-500/20 bg-emerald-500/5">
+              <CheckCircle2 size={40} className="mx-auto mb-3 text-emerald-400" />
+              <h3 className="font-semibold text-lg text-white">No Pending Submissions</h3>
+              <p className="text-sm text-slate-400 mt-1">All resource submissions are approved and up to date! 🎉</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {pendingResources.map((r) => (
+                <div
+                  key={r._id}
+                  className="glass-card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-amber-500/20"
                 >
-                  <Download size={13} /> Download
-                </button>
-                <button
-                  id={`like-${resource._id}`}
-                  onClick={() => handleLike(resource._id)}
-                  className="p-2 rounded-xl transition-colors hover:bg-white/5 flex items-center gap-1 text-xs"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  <Heart size={14} /> {resource.likes?.length || 0}
-                </button>
-                <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                  <Eye size={13} /> {resource.views}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15 border border-amber-500/30">
+                      <FileText size={20} className="text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-base text-white">{r.title}</h3>
+                        <span className="badge badge-warning text-[10px] uppercase font-bold tracking-wider">
+                          {r.type}
+                        </span>
+                      </div>
+                      <p className="text-xs text-indigo-300 mt-0.5">
+                        Subject: <strong className="text-white">{r.subject}</strong> · Branch: {r.branch} {r.year ? `· Year ${r.year}` : ''}
+                      </p>
+                      {r.description && (
+                        <p className="text-xs text-slate-300 mt-1 line-clamp-2 bg-black/20 p-2 rounded-lg border border-white/5">
+                          {r.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
+                        <span>Submitted by: <strong className="text-slate-200">{r.uploadedBy?.name || 'Student'}</strong> ({r.uploadedBy?.rollNumber || 'N/A'})</span>
+                        {r.fileSize && <span>File Size: {(r.fileSize / 1024 / 1024).toFixed(2)} MB</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-white/10">
+                    <button
+                      onClick={() => setPreviewItem({
+                        id: r._id,
+                        title: r.title,
+                        fileUrl: r.fileUrl,
+                        fileName: r.fileName,
+                        subject: r.subject,
+                        branch: r.branch,
+                      })}
+                      className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5"
+                    >
+                      <Eye size={14} /> Preview File
+                    </button>
+                    <button
+                      onClick={() => handleReject(r._id)}
+                      disabled={actionLoadingId === r._id}
+                      className="px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 flex items-center gap-1.5 transition-all"
+                    >
+                      <X size={14} /> Reject
+                    </button>
+                    <button
+                      onClick={() => handleApprove(r._id)}
+                      disabled={actionLoadingId === r._id}
+                      className="px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/20"
+                    >
+                      {actionLoadingId === r._id ? (
+                        <RefreshCw size={14} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Check size={14} /> Approve & Publish
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -313,6 +543,19 @@ export default function ResourcesPage() {
           </button>
         </form>
       </Modal>
+      {/* File Preview Modal */}
+      {previewItem && (
+        <FilePreviewModal
+          isOpen={!!previewItem}
+          onClose={() => setPreviewItem(null)}
+          title={previewItem.title}
+          fileUrl={previewItem.fileUrl}
+          resourceId={previewItem.id}
+          fileName={previewItem.fileName}
+          subject={previewItem.subject}
+          branch={previewItem.branch}
+        />
+      )}
     </div>
   );
 }

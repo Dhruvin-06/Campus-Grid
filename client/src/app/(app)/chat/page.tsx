@@ -113,7 +113,7 @@ export default function ChatPage() {
     setSearchQuery(q);
     if (!q.trim()) { setSearchResults([]); return; }
     try {
-      const res = await usersApi.getAll({ search: q, role: 'student', limit: 5 });
+      const res = await usersApi.getAll({ search: q, limit: 10 });
       setSearchResults(res.data.users || []);
     } catch { }
   };

@@ -203,12 +203,6 @@ export default function LoginPage() {
             Continue with Google
           </motion.button>
 
-          {/* Demo credentials */}
-          <div className="mt-6 p-3 rounded-lg text-xs" style={{ background: 'rgba(99, 102, 241, 0.08)', color: 'var(--text-secondary)' }}>
-            <p className="font-medium mb-1" style={{ color: 'var(--color-primary-light)' }}>Demo credentials:</p>
-            <p>Admin: admin@campus.edu / admin123</p>
-            <p>Student: student@campus.edu / student123</p>
-          </div>
 
           <p className="mt-6 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
             No account?{' '}

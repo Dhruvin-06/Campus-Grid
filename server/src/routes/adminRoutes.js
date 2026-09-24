@@ -4,7 +4,7 @@ const {
   getAnalytics, getUsers, getAuditLog,
   broadcastAnnouncement, reviewResource, adminUpdateUser,
 } = require('../controllers/adminController');
-const { protect, adminOnly, placementOrAdmin } = require('../middleware/auth');
+const { protect, adminOnly } = require('../middleware/auth');
 
 router.use(protect, adminOnly);
 

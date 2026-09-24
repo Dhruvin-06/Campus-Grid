@@ -12,10 +12,17 @@ cloudinary.config({
 // ─── PDF/Document Storage ──────────────────────────────────────────────────────
 const documentStorage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: 'campusgrid/resources',
-    allowed_formats: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt'],
-    resource_type: 'raw',
+  params: async (req, file) => {
+    const origName = file.originalname || 'document';
+    const ext = origName.includes('.') ? origName.split('.').pop() : 'pdf';
+    const baseName = origName.substring(0, origName.lastIndexOf('.')) || 'file';
+    const cleanName = baseName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50);
+
+    return {
+      folder: 'campusgrid/resources',
+      resource_type: 'raw',
+      public_id: `${cleanName}_${Date.now()}.${ext}`,
+    };
   },
 });
 

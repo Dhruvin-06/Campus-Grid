@@ -7,9 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Briefcase, MapPin, Calendar, ExternalLink, Bookmark, BookmarkCheck,
   Search, Filter, Clock, Building2, Zap, Award, GraduationCap, ChevronDown,
-  X, CheckCircle2, Star,
+  X, CheckCircle2, Star, Pencil, Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Modal from '@/components/Modal';
 
 const TYPES = ['all', 'placement', 'internship', 'hackathon'] as const;
 
@@ -19,10 +20,23 @@ const typeConfig = {
   hackathon:  { label: 'Hackathon',  color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  icon: Zap },
 };
 
-function OpportunityCard({ opp, onSave }: { opp: any; onSave: (id: string) => void }) {
+function OpportunityCard({
+  opp,
+  onSave,
+  onEdit,
+  onDelete,
+}: {
+  opp: any;
+  onSave: (id: string) => void;
+  onEdit?: (opp: any) => void;
+  onDelete?: (id: string) => void;
+}) {
+  const { user } = useAuth();
   const tc = typeConfig[opp.type as keyof typeof typeConfig];
   const Icon = tc?.icon || Briefcase;
   const isExpired = opp.deadline && new Date(opp.deadline) < new Date();
+  const posterId = typeof opp.postedBy === 'object' ? opp.postedBy?._id : opp.postedBy;
+  const canManage = user?.role === 'admin' || (posterId && user?._id && posterId === user?._id);
 
   const daysLeft = opp.deadline
     ? Math.max(0, Math.ceil((new Date(opp.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
@@ -37,32 +51,62 @@ function OpportunityCard({ opp, onSave }: { opp: any; onSave: (id: string) => vo
       className="card-glass rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group"
       style={{ border: '1px solid rgba(255,255,255,0.07)' }}
     >
-      {/* Verified badge */}
-      {opp.isVerified && (
-        <span className="absolute top-4 right-14 flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
-          <CheckCircle2 size={11} /> Verified
-        </span>
-      )}
+      {/* Top bar with Badges & Actions */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Type badge */}
+          <span className="text-xs font-semibold px-3 py-1 rounded-full"
+            style={{ background: tc?.bg, color: tc?.color }}>
+            {tc?.label || opp.type}
+          </span>
+          {/* Verified badge */}
+          {opp.isVerified && (
+            <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981' }}>
+              <CheckCircle2 size={11} /> Verified
+            </span>
+          )}
+        </div>
 
-      {/* Save button */}
-      <button
-        onClick={() => onSave(opp._id)}
-        className="absolute top-4 right-4 p-1.5 rounded-lg transition-all hover:bg-white/10"
-        title={opp.isSaved ? 'Unsave' : 'Save'}
-      >
-        {opp.isSaved
-          ? <BookmarkCheck size={16} style={{ color: '#6366f1' }} />
-          : <Bookmark size={16} style={{ color: 'var(--text-muted)' }} />}
-      </button>
+        {/* Action buttons (Edit, Delete, Save) */}
+        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+          {canManage && onEdit && (
+            <button
+              onClick={() => onEdit(opp)}
+              className="p-1.5 rounded-lg transition-all hover:bg-indigo-500/20 text-indigo-400"
+              title="Edit Opportunity"
+            >
+              <Pencil size={15} />
+            </button>
+          )}
+          {canManage && onDelete && (
+            <button
+              onClick={() => onDelete(opp._id)}
+              className="p-1.5 rounded-lg transition-all hover:bg-red-500/20 text-red-400"
+              title="Delete Opportunity"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
+          <button
+            onClick={() => onSave(opp._id)}
+            className="p-1.5 rounded-lg transition-all hover:bg-white/10"
+            title={opp.isSaved ? 'Unsave' : 'Save'}
+          >
+            {opp.isSaved
+              ? <BookmarkCheck size={16} style={{ color: '#6366f1' }} />
+              : <Bookmark size={16} style={{ color: 'var(--text-muted)' }} />}
+          </button>
+        </div>
+      </div>
 
       {/* Header */}
-      <div className="flex items-start gap-3 pr-12">
+      <div className="flex items-start gap-3">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: tc?.bg || 'rgba(99,102,241,0.12)' }}>
           <Icon size={20} style={{ color: tc?.color || '#6366f1' }} />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h3 className="font-bold text-base leading-snug line-clamp-2">{opp.title}</h3>
           <div className="flex items-center gap-1.5 mt-1">
             <Building2 size={12} style={{ color: 'var(--text-muted)' }} />
@@ -70,12 +114,6 @@ function OpportunityCard({ opp, onSave }: { opp: any; onSave: (id: string) => vo
           </div>
         </div>
       </div>
-
-      {/* Type badge */}
-      <span className="self-start text-xs font-semibold px-3 py-1 rounded-full"
-        style={{ background: tc?.bg, color: tc?.color }}>
-        {tc?.label || opp.type}
-      </span>
 
       {/* Description */}
       <p className="text-sm line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
@@ -151,6 +189,9 @@ export default function OpportunitiesPage() {
   const [savedOnly, setSavedOnly] = useState(false);
   const [total, setTotal] = useState(0);
 
+  const [editingOpp, setEditingOpp] = useState<any>(null);
+  const [submittingOpp, setSubmittingOpp] = useState(false);
+
   const fetchOpportunities = useCallback(async () => {
     setLoading(true);
     try {
@@ -186,22 +227,47 @@ export default function OpportunitiesPage() {
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto space-y-6">
+  const handleDeleteOpp = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this opportunity?')) return;
+    try {
+      await opportunitiesApi.delete(id);
+      setOpportunities((prev) => prev.filter((o) => o._id !== id));
+      toast.success('Opportunity removed successfully');
+    } catch {
+      toast.error('Failed to remove opportunity');
+    }
+  };
+
+  const handleUpdateOpp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOpp) return;
+    setSubmittingOpp(true);
+    try {
+      await opportunitiesApi.update(editingOpp._id, editingOpp);
+      toast.success('Opportunity updated successfully! ✨');
+      setEditingOpp(null);
+      fetchOpportunities();
+    } catch {
+      toast.error('Failed to update opportunity');
+    } finally {
+      setSubmittingOpp(false);
+    }
+  };
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [form, setForm] = useState({
     title: '', company: '', type: 'placement', description: '', location: 'On-Campus', packageOrStipend: '', applicationLink: '', skills: '', branch: 'CSE,ECE,IT', minCGPA: '0',
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const canCreate = user?.role === 'placement' || user?.role === 'admin';
+  const canCreate = user?.role === 'admin';
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
       await opportunitiesApi.create(form);
-      toast.success(user?.role === 'admin' ? 'Opportunity posted & verified!' : 'Opportunity submitted for verification!');
+      toast.success('Opportunity posted successfully!');
       setShowCreateModal(false);
       setForm({ title: '', company: '', type: 'placement', description: '', location: 'On-Campus', packageOrStipend: '', applicationLink: '', skills: '', branch: 'CSE,ECE,IT', minCGPA: '0' });
       fetchOpportunities();
@@ -271,59 +337,142 @@ export default function OpportunitiesPage() {
       </div>
 
       {/* Modal for Placement/Admin creation */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="saas-card w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto" style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white">Post Placement Drive / Opportunity</h2>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white"><X size={18} /></button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Title</label>
-                <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Software Engineer Intern / SDE-1" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">Company</label>
-                  <input required value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} placeholder="Google / Microsoft / TCS" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">Type</label>
-                  <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none">
-                    <option value="placement">Placement</option>
-                    <option value="internship">Internship</option>
-                    <option value="hackathon">Hackathon</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Description</label>
-                <textarea required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} placeholder="Job details, eligibility, role expectations..." className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">Stipend / Package</label>
-                  <input value={form.packageOrStipend} onChange={e => setForm({ ...form, packageOrStipend: e.target.value })} placeholder="12 LPA / ₹40k/mo" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">Location</label>
-                  <input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="On-Campus / Remote / Bangalore" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Application Link</label>
-                <input value={form.applicationLink} onChange={e => setForm({ ...form, applicationLink: e.target.value })} placeholder="https://careers.company.com/job/123" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white">Cancel</button>
-                <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold">{submitting ? 'Posting...' : 'Post Opportunity'}</button>
-              </div>
-            </form>
+      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Post Placement Drive / Opportunity" maxWidth="max-w-lg">
+        <form onSubmit={handleCreate} className="space-y-3 text-xs">
+          <div>
+            <label className="block text-slate-300 font-medium mb-1">Title</label>
+            <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Software Engineer Intern / SDE-1" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
           </div>
-        </div>
-      )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Company</label>
+              <input required value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} placeholder="Google / Microsoft / TCS" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Type</label>
+              <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none">
+                <option value="placement">Placement</option>
+                <option value="internship">Internship</option>
+                <option value="hackathon">Hackathon</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-slate-300 font-medium mb-1">Description</label>
+            <textarea required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} placeholder="Job details, eligibility, role expectations..." className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Stipend / Package</label>
+              <input value={form.packageOrStipend} onChange={e => setForm({ ...form, packageOrStipend: e.target.value })} placeholder="12 LPA / ₹40k/mo" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Location</label>
+              <input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="On-Campus / Remote / Bangalore" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-slate-300 font-medium mb-1">Application Link</label>
+            <input value={form.applicationLink} onChange={e => setForm({ ...form, applicationLink: e.target.value })} placeholder="https://careers.company.com/job/123" className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none" />
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white">Cancel</button>
+            <button type="submit" disabled={submitting} className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold">{submitting ? 'Posting...' : 'Post Opportunity'}</button>
+          </div>
+        </form>
+      </Modal>
 
+      {/* Edit Opportunity Modal */}
+      {editingOpp && (
+        <Modal isOpen={!!editingOpp} onClose={() => setEditingOpp(null)} title="Edit Opportunity" maxWidth="max-w-lg">
+          <form onSubmit={handleUpdateOpp} className="space-y-3 text-xs">
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Title *</label>
+              <input
+                required
+                value={editingOpp.title || ''}
+                onChange={(e) => setEditingOpp({ ...editingOpp, title: e.target.value })}
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Company *</label>
+                <input
+                  required
+                  value={editingOpp.company || ''}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, company: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Type</label>
+                <select
+                  value={editingOpp.type || 'placement'}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, type: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                >
+                  <option value="placement">Placement</option>
+                  <option value="internship">Internship</option>
+                  <option value="hackathon">Hackathon</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Description *</label>
+              <textarea
+                required
+                rows={3}
+                value={editingOpp.description || ''}
+                onChange={(e) => setEditingOpp({ ...editingOpp, description: e.target.value })}
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Stipend / Package</label>
+                <input
+                  value={editingOpp.packageOrStipend || ''}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, packageOrStipend: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Location</label>
+                <input
+                  value={editingOpp.location || ''}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, location: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Application Link</label>
+              <input
+                value={editingOpp.applicationLink || ''}
+                onChange={(e) => setEditingOpp({ ...editingOpp, applicationLink: e.target.value })}
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditingOpp(null)}
+                className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submittingOpp}
+                className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs flex items-center gap-1.5"
+              >
+                {submittingOpp ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {/* Type tabs */}
       <div className="flex gap-2 flex-wrap">
@@ -376,7 +525,13 @@ export default function OpportunitiesPage() {
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence mode="popLayout">
             {opportunities.map((opp) => (
-              <OpportunityCard key={opp._id} opp={opp} onSave={handleSave} />
+              <OpportunityCard
+                key={opp._id}
+                opp={opp}
+                onSave={handleSave}
+                onEdit={(o) => setEditingOpp(o)}
+                onDelete={handleDeleteOpp}
+              />
             ))}
           </AnimatePresence>
         </motion.div>

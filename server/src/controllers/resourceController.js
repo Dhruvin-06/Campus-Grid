@@ -85,6 +85,59 @@ const getResourceById = asyncHandler(async (req, res) => {
   res.json({ success: true, resource });
 });
 
+const getMimeType = (filename) => {
+  const ext = filename ? filename.split('.').pop()?.toLowerCase() : '';
+  switch (ext) {
+    case 'pdf': return 'application/pdf';
+    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'doc': return 'application/msword';
+    case 'pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    case 'ppt': return 'application/vnd.ms-powerpoint';
+    case 'txt': return 'text/plain';
+    case 'png': return 'image/png';
+    case 'jpg': case 'jpeg': return 'image/jpeg';
+    default: return 'application/octet-stream';
+  }
+};
+
+// @desc    Download resource file with original filename & format
+// @route   GET /api/resources/:id/download
+// @access  Private
+const downloadResource = asyncHandler(async (req, res) => {
+  const resource = await Resource.findById(req.params.id);
+
+  if (!resource) {
+    res.status(404);
+    throw new Error('Resource not found');
+  }
+
+  // Increment download count
+  resource.downloads += 1;
+  await resource.save();
+
+  const originalName = resource.fileName || `${resource.title || 'resource'}.pdf`;
+  const mimeType = getMimeType(originalName);
+
+  try {
+    const fetchRes = await fetch(resource.fileUrl);
+    if (!fetchRes.ok) {
+      return res.redirect(resource.fileUrl);
+    }
+    const arrayBuffer = await fetchRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${encodeURIComponent(originalName)}"; filename*=UTF-8''${encodeURIComponent(originalName)}`
+    );
+    res.setHeader('Content-Length', buffer.length);
+    return res.send(buffer);
+  } catch (err) {
+    return res.redirect(resource.fileUrl);
+  }
+});
+
 // @desc    Increment download count
 // @route   PUT /api/resources/:id/download
 // @access  Private
@@ -175,6 +228,7 @@ module.exports = {
   uploadResource,
   getResources,
   getResourceById,
+  downloadResource,
   trackDownload,
   likeResource,
   approveResource,

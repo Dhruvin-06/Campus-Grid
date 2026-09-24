@@ -9,7 +9,7 @@ const { protect, adminOnly, authorize } = require('../middleware/auth');
 const { uploadAvatar } = require('../config/upload');
 
 router.get('/stats', protect, getOverviewStats);
-router.get('/', protect, authorize('admin', 'faculty'), getAllUsers);
+router.get('/', protect, getAllUsers);
 router.get('/peer-match', protect, getPeerMatches);
 router.get('/:id', protect, getUserById);
 router.post('/:id/connect', protect, sendConnectionRequest);

@@ -241,7 +241,7 @@ const toggleUserActive = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const changeUserRole = asyncHandler(async (req, res) => {
   const { role } = req.body;
-  const validRoles = ['student', 'faculty', 'placement', 'admin'];
+  const validRoles = ['student', 'faculty', 'admin'];
 
   if (!validRoles.includes(role)) {
     res.status(400);
@@ -289,7 +289,6 @@ const getOverviewStats = asyncHandler(async (req, res) => {
   const [
     totalStudents,
     totalFaculty,
-    totalPlacement,
     totalResources,
     pendingResources,
     totalLostFound,
@@ -299,7 +298,6 @@ const getOverviewStats = asyncHandler(async (req, res) => {
   ] = await Promise.all([
     User.countDocuments({ role: 'student' }),
     User.countDocuments({ role: 'faculty' }),
-    User.countDocuments({ role: 'placement' }),
     Resource.countDocuments({ approved: true }),
     Resource.countDocuments({ approved: false }),
     LostFound.countDocuments({ resolved: false }),
@@ -314,7 +312,6 @@ const getOverviewStats = asyncHandler(async (req, res) => {
       role: req.user.role,
       totalStudents,
       totalFaculty,
-      totalPlacement,
       totalResources,
       pendingResources,
       totalLostFound,

@@ -6,11 +6,13 @@ import { adminApi, usersApi, resourcesApi, contentApi, opportunitiesApi } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import Modal from '@/components/Modal';
+import FilePreviewModal from '@/components/FilePreviewModal';
 import {
   Shield, Users, BookOpen, FileText, BarChart2,
   CheckCircle, XCircle, TrendingUp, Megaphone,
   Search, Trash2, Send, Bell, Briefcase,
-  AlertCircle, RefreshCw,
+  AlertCircle, RefreshCw, Pencil,
 } from 'lucide-react';
 
 const TABS = [
@@ -26,7 +28,7 @@ const TABS = [
 type Tab = typeof TABS[number]['id'];
 
 const BRANCHES = ['All', 'CSE', 'ECE', 'ME', 'CE', 'EEE', 'IT', 'AIDS', 'AIML', 'Other'];
-const ROLES    = ['All', 'student', 'faculty', 'placement', 'admin'];
+const ROLES    = ['All', 'student', 'faculty', 'admin'];
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -44,6 +46,10 @@ export default function AdminPage() {
   const [pendingOpportunities, setPendingOpportunities] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewItem, setPreviewItem] = useState<any>(null);
+  const [editingOpp, setEditingOpp] = useState<any>(null);
+  const [submittingOpp, setSubmittingOpp] = useState(false);
+  const [oppFilter, setOppFilter] = useState<'pending' | 'all'>('pending');
 
   // Broadcast
   const [broadcastMsg, setBroadcastMsg] = useState('');
@@ -95,12 +101,14 @@ export default function AdminPage() {
     } catch { toast.error('Failed to load pending posts'); }
   };
 
-  const fetchPendingOpportunities = async () => {
+  const fetchPendingOpportunities = useCallback(async () => {
     try {
-      const res = await opportunitiesApi.getAllAdmin({ verified: 'false' });
+      const res = await opportunitiesApi.getAllAdmin({
+        verified: oppFilter === 'pending' ? 'false' : undefined,
+      });
       setPendingOpportunities(res.data.opportunities || []);
     } catch { toast.error('Failed to load opportunities'); }
-  };
+  }, [oppFilter]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -146,6 +154,33 @@ export default function AdminPage() {
       setPendingOpportunities((p) => p.filter((o) => o._id !== id));
       toast.success(action === 'verify' ? 'Opportunity verified & published ✅' : 'Opportunity rejected');
     } catch { toast.error('Failed'); }
+  };
+
+  const handleDeleteOpp = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this opportunity?')) return;
+    try {
+      await opportunitiesApi.delete(id);
+      setPendingOpportunities((prev) => prev.filter((o) => o._id !== id));
+      toast.success('Opportunity removed successfully');
+    } catch {
+      toast.error('Failed to remove opportunity');
+    }
+  };
+
+  const handleUpdateOpp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOpp) return;
+    setSubmittingOpp(true);
+    try {
+      await opportunitiesApi.update(editingOpp._id, editingOpp);
+      toast.success('Opportunity updated successfully! ✨');
+      setEditingOpp(null);
+      fetchPendingOpportunities();
+    } catch {
+      toast.error('Failed to update opportunity');
+    } finally {
+      setSubmittingOpp(false);
+    }
   };
 
   const changeRole = async (id: string, role: string) => {
@@ -250,13 +285,6 @@ export default function AdminPage() {
                 onClick: () => { setUserRole('faculty'); setTab('users'); },
               },
               {
-                label: 'Placement Cell',
-                value: s?.totalPlacement,
-                color: '#f59e0b',
-                icon: Briefcase,
-                onClick: () => { setUserRole('placement'); setTab('users'); },
-              },
-              {
                 label: 'Resources',
                 value: s?.totalResources,
                 color: '#3b82f6',
@@ -342,11 +370,13 @@ export default function AdminPage() {
                     )}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    <a href={r.fileUrl} target="_blank" rel="noopener noreferrer"
+                    <button
+                      onClick={() => setPreviewItem({ title: r.title, fileUrl: r.fileUrl, subject: r.subject, branch: r.branch })}
                       className="text-xs px-2 py-1 rounded-lg transition-all hover:bg-white/10"
-                      style={{ color: '#6366f1', border: '1px solid rgba(99,102,241,0.3)' }}>
+                      style={{ color: '#6366f1', border: '1px solid rgba(99,102,241,0.3)' }}
+                    >
                       Preview
-                    </a>
+                    </button>
                     <button onClick={() => reviewResource(r._id, 'approve')}
                       className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg transition-all hover:bg-emerald-500/20"
                       style={{ color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
@@ -408,43 +438,92 @@ export default function AdminPage() {
       {/* Opportunities */}
       {tab === 'opportunities' && (
         <div className="space-y-4">
-          <h2 className="font-semibold text-lg">Pending Opportunity Verification ({pendingOpportunities.length})</h2>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h2 className="font-semibold text-lg">
+              {oppFilter === 'pending' ? `Pending Opportunity Verification (${pendingOpportunities.length})` : `All Career Opportunities (${pendingOpportunities.length})`}
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setOppFilter('pending')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${oppFilter === 'pending' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-white/5 text-slate-400'}`}
+              >
+                Pending Review
+              </button>
+              <button
+                onClick={() => setOppFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${oppFilter === 'all' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40' : 'bg-white/5 text-slate-400'}`}
+              >
+                All Opportunities
+              </button>
+            </div>
+          </div>
+
           {pendingOpportunities.length === 0 ? (
             <div className="text-center py-16">
               <CheckCircle size={32} className="mx-auto mb-3" style={{ color: '#10b981' }} />
-              <p style={{ color: 'var(--text-muted)' }}>No unverified opportunities!</p>
+              <p style={{ color: 'var(--text-muted)' }}>
+                {oppFilter === 'pending' ? 'No unverified opportunities!' : 'No opportunities found.'}
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               {pendingOpportunities.map((o) => (
-                <div key={o._id} className="card-glass rounded-xl p-4 flex items-start gap-4"
+                <div key={o._id} className="card-glass rounded-xl p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
                   style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(245,158,11,0.15)' }}>
-                    <Briefcase size={16} style={{ color: '#f59e0b' }} />
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'rgba(245,158,11,0.15)' }}>
+                      <Briefcase size={16} style={{ color: '#f59e0b' }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-sm text-white">{o.title}</p>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${o.isVerified ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                          {o.isVerified ? 'Verified' : 'Pending'}
+                        </span>
+                      </div>
+                      <p className="text-xs mt-0.5 text-slate-400">
+                        {o.company} · {o.type} · Posted by <strong className="text-slate-200">{o.postedBy?.name || 'Admin'}</strong>
+                      </p>
+                      {o.description && (
+                        <p className="text-xs text-slate-300 mt-1 line-clamp-2 bg-black/20 p-2 rounded-lg border border-white/5">
+                          {o.description}
+                        </p>
+                      )}
+                      {o.applicationLink && (
+                        <a href={o.applicationLink} target="_blank" rel="noopener noreferrer"
+                          className="text-xs mt-1 block truncate" style={{ color: '#6366f1' }}>
+                          {o.applicationLink}
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{o.title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {o.company} · {o.type} · Posted by {o.postedBy?.name}
-                    </p>
-                    {o.applicationLink && (
-                      <a href={o.applicationLink} target="_blank" rel="noopener noreferrer"
-                        className="text-xs mt-1" style={{ color: '#6366f1' }}>
-                        {o.applicationLink.substring(0, 60)}…
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button onClick={() => verifyOpportunity(o._id, 'verify')}
-                      className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg transition-all hover:bg-emerald-500/20"
-                      style={{ color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
-                      <CheckCircle size={12} /> Verify & Publish
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                    <button
+                      onClick={() => setEditingOpp(o)}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/30"
+                    >
+                      <Pencil size={12} /> Edit
                     </button>
-                    <button onClick={() => verifyOpportunity(o._id, 'reject')}
-                      className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg transition-all hover:bg-red-500/20"
-                      style={{ color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' }}>
-                      <XCircle size={12} /> Reject
+                    {!o.isVerified && (
+                      <button onClick={() => verifyOpportunity(o._id, 'verify')}
+                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30">
+                        <CheckCircle size={12} /> Verify & Publish
+                      </button>
+                    )}
+                    {!o.isVerified && (
+                      <button onClick={() => verifyOpportunity(o._id, 'reject')}
+                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30">
+                        <XCircle size={12} /> Reject
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteOpp(o._id)}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30"
+                    >
+                      <Trash2 size={12} /> Remove
                     </button>
                   </div>
                 </div>
@@ -492,7 +571,7 @@ export default function AdminPage() {
                 <select value={u.role} onChange={(e) => changeRole(u._id, e.target.value)}
                   className="text-xs px-2 py-1 rounded-lg outline-none capitalize"
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)' }}>
-                  {['student', 'faculty', 'placement', 'admin'].map((r) => (
+                  {['student', 'faculty', 'admin'].map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
@@ -562,6 +641,108 @@ export default function AdminPage() {
             {broadcasting ? 'Sending…' : 'Send Broadcast'}
           </button>
         </div>
+      )}
+      {/* Edit Opportunity Modal */}
+      {editingOpp && (
+        <Modal isOpen={!!editingOpp} onClose={() => setEditingOpp(null)} title="Edit Opportunity" maxWidth="max-w-lg">
+          <form onSubmit={handleUpdateOpp} className="space-y-3 text-xs">
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Title *</label>
+              <input
+                required
+                value={editingOpp.title || ''}
+                onChange={(e) => setEditingOpp({ ...editingOpp, title: e.target.value })}
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Company *</label>
+                <input
+                  required
+                  value={editingOpp.company || ''}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, company: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Type</label>
+                <select
+                  value={editingOpp.type || 'placement'}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, type: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                >
+                  <option value="placement">Placement</option>
+                  <option value="internship">Internship</option>
+                  <option value="hackathon">Hackathon</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Description *</label>
+              <textarea
+                required
+                rows={3}
+                value={editingOpp.description || ''}
+                onChange={(e) => setEditingOpp({ ...editingOpp, description: e.target.value })}
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Stipend / Package</label>
+                <input
+                  value={editingOpp.packageOrStipend || ''}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, packageOrStipend: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Location</label>
+                <input
+                  value={editingOpp.location || ''}
+                  onChange={(e) => setEditingOpp({ ...editingOpp, location: e.target.value })}
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Application Link</label>
+              <input
+                value={editingOpp.applicationLink || ''}
+                onChange={(e) => setEditingOpp({ ...editingOpp, applicationLink: e.target.value })}
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditingOpp(null)}
+                className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submittingOpp}
+                className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs flex items-center gap-1.5"
+              >
+                {submittingOpp ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+      {/* File Preview Modal */}
+      {previewItem && (
+        <FilePreviewModal
+          isOpen={!!previewItem}
+          onClose={() => setPreviewItem(null)}
+          title={previewItem.title}
+          fileUrl={previewItem.fileUrl}
+          subject={previewItem.subject}
+          branch={previewItem.branch}
+        />
       )}
     </div>
   );

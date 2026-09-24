@@ -53,19 +53,6 @@ const facultyNav = [
   ]},
 ];
 
-const placementNav = [
-  { section: 'MAIN', items: [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  ]},
-  { section: 'CAREER', items: [
-    { href: '/opportunities', label: 'Opportunities', icon: Briefcase },
-  ]},
-  { section: 'CAMPUS', items: [
-    { href: '/feed',      label: 'Campus Feed',  icon: Newspaper },
-    { href: '/lostfound', label: 'Lost & Found', icon: MapPin },
-  ]},
-];
-
 const adminNav = [
   { section: 'MAIN', items: [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -93,7 +80,6 @@ const adminNav = [
 const roleConfig: Record<string, { label: string; color: string; bg: string }> = {
   student:   { label: 'Student',       color: '#818CF8', bg: 'rgba(79,70,229,0.15)'  },
   faculty:   { label: 'Faculty',       color: '#34D399', bg: 'rgba(16,185,129,0.15)' },
-  placement: { label: 'Placement Cell', color: '#FBBF24', bg: 'rgba(245,158,11,0.15)' },
   admin:     { label: 'Admin',         color: '#F87171', bg: 'rgba(239,68,68,0.15)'  },
 };
 
@@ -155,7 +141,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const navSections =
     role === 'faculty'   ? facultyNav   :
-    role === 'placement' ? placementNav :
     role === 'admin'     ? adminNav     :
     studentNav;
 
@@ -169,13 +154,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   })();
 
   return (
-    <div className="flex min-h-screen bg-[#0B1120]">
+    <div className="flex min-h-screen bg-[#070A13] text-slate-100 relative">
       {/* Mobile overlay */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -186,21 +171,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col h-full overflow-hidden">
 
           {/* Logo Header */}
-          <div className="flex-shrink-0 p-4 border-b border-white/[0.06]">
+          <div className="flex-shrink-0 p-4 border-b border-white/[0.08]">
             <div className="flex items-center justify-between px-1 py-1">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
-                  style={{ background: 'var(--color-primary)' }}>
-                  <GraduationCap size={18} />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/40 ring-1 ring-indigo-400/30 pulse-glow"
+                  style={{ background: 'var(--gradient-primary)' }}>
+                  <GraduationCap size={20} />
                 </div>
                 <div>
-                  <h1 className="font-extrabold text-base leading-tight tracking-tight text-white">CampusGrid</h1>
-                  <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Smart Campus OS</p>
+                  <h1 className="font-extrabold text-base leading-tight tracking-tight text-white gradient-text">CampusGrid</h1>
+                  <p className="text-[10px] font-medium text-cyan-400/80">Smart Campus OS</p>
                 </div>
               </div>
 
               <button
-                className="lg:hidden p-1 rounded-md hover:bg-white/10 text-slate-400"
+                className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
                 onClick={() => setSidebarOpen(false)}
                 title="Close sidebar"
               >
@@ -213,11 +198,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
             {navSections.map(({ section, items }) => (
               <div key={section}>
-                <p className="text-[10px] font-bold uppercase tracking-wider px-2.5 mb-1.5"
-                  style={{ color: 'var(--text-muted)' }}>
+                <p className="text-[10px] font-bold uppercase tracking-wider px-3 mb-2 text-slate-400/60">
                   {section}
                 </p>
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {items.map(({ href, label, icon: Icon }) => (
                     <Link
                       key={href}
@@ -235,33 +219,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* User Profile & Footer Section */}
-          <div className="flex-shrink-0 p-3 border-t border-white/[0.06] bg-slate-900/40">
+          <div className="flex-shrink-0 p-3 border-t border-white/[0.08] bg-slate-950/80 backdrop-blur-md">
             <Link href="/profile"
-              className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/[0.05] transition-all"
+              className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-all"
               onClick={() => setSidebarOpen(false)}>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0 overflow-hidden"
-                style={{ background: 'var(--color-primary)' }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0 overflow-hidden ring-2 ring-indigo-500/40 shadow-sm shadow-indigo-500/30"
+                style={{ background: 'var(--gradient-primary)' }}>
                 {user?.avatar
                   ? <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                   : user?.name?.[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-xs truncate text-white">{user?.name}</p>
-                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-[10px] truncate text-slate-400">
                   {user?.rollNumber || user?.branch}
                 </p>
               </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: rc.bg, color: rc.color }}>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.color}40` }}>
                 {rc.label}
               </span>
             </Link>
 
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/[0.05] px-1">
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/[0.06] px-1">
               <Link href="/settings" onClick={() => setSidebarOpen(false)}
                 className="text-xs flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors">
                 <Settings size={14} /> Settings
               </Link>
-              <button onClick={logout} className="text-xs flex items-center gap-1.5 text-red-400 hover:text-red-300 transition-colors">
+              <button onClick={logout} className="text-xs flex items-center gap-1.5 text-rose-400 hover:text-rose-300 transition-colors">
                 <LogOut size={14} /> Logout
               </button>
             </div>
@@ -270,22 +254,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Viewport */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-200 ${sidebarOpen ? 'lg:pl-[250px]' : 'pl-0'}`}>
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:pl-[260px]' : 'pl-0'}`}>
         {/* Navbar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-3 bg-[#0B1120]/90 backdrop-blur-md border-b border-white/[0.07]">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-3.5 backdrop-blur-2xl border-b border-white/[0.08]" style={{ background: 'rgba(3, 7, 18, 0.85)' }}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(prev => !prev)}
               title="Toggle sidebar"
-              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-slate-300">
+              className="p-1.5 rounded-xl hover:bg-white/10 transition-colors text-slate-300 border border-white/5">
               <Menu size={18} />
             </button>
 
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-slate-400">CampusGrid</span>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-slate-400 font-medium">CampusGrid</span>
               <span className="text-slate-600">/</span>
-              <span className="font-semibold text-slate-200">{currentPageName}</span>
+              <span className="font-bold text-white gradient-text-cyan">{currentPageName}</span>
             </div>
           </div>
 
@@ -293,33 +277,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             {/* Search shortcut button */}
             <Link href="/resources"
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all hover:border-white/20"
+              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs transition-all hover:border-indigo-500/40 hover:bg-white/[0.06]"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-muted)' }}>
               <Search size={13} />
               <span>Search resources, opportunities...</span>
-              <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-400">⌘K</kbd>
+              <kbd className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/10 text-slate-300 font-mono">⌘K</kbd>
             </Link>
 
             {/* AI Assistant shortcut */}
             <Link href="/ai-assistant"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-violet-600/20"
-              style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)', color: '#C084FC' }}>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] shadow-sm shadow-violet-500/20"
+              style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.4)', color: '#C084FC' }}>
               <Sparkles size={13} />
               <span className="hidden md:inline">AI Copilot</span>
             </Link>
 
             {/* Notifications */}
-            <Link href="/notifications" className="relative p-2 rounded-lg transition-colors hover:bg-white/10 text-slate-300">
+            <Link href="/notifications" className="relative p-2 rounded-xl transition-colors hover:bg-white/10 text-slate-300 border border-transparent hover:border-white/10">
               <Bell size={17} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400 animate-pulse" />
               )}
             </Link>
 
             {/* User Avatar */}
             <Link href="/profile" className="flex items-center gap-2 pl-1">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden ring-1 ring-white/20"
-                style={{ background: 'var(--color-primary)' }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden ring-2 ring-cyan-400/40 shadow-sm shadow-cyan-500/30"
+                style={{ background: 'var(--gradient-primary)' }}>
                 {user?.avatar
                   ? <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
                   : user?.name?.[0]?.toUpperCase()}
@@ -332,9 +316,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
           <motion.div
             key={pathname}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.18 }}>
+            transition={{ duration: 0.2, ease: 'easeOut' }}>
             {children}
           </motion.div>
         </main>

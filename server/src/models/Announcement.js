@@ -13,7 +13,7 @@ const announcementSchema = new mongoose.Schema(
     },
     targetAudience: {
       type: String,
-      enum: ['all', 'students', 'faculty', 'placement', 'specific_branch', 'specific_year'],
+      enum: ['all', 'students', 'faculty', 'specific_branch', 'specific_year'],
       default: 'all',
     },
     targetBranch: { type: String },

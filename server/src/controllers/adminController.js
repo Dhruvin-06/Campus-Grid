@@ -25,14 +25,13 @@ const logAction = async (req, action, targetModel = '', targetId = null, details
 // @route   GET /api/admin/analytics
 const getAnalytics = asyncHandler(async (req, res) => {
   const [
-    totalUsers, totalStudents, totalFaculty, totalPlacement,
+    totalUsers, totalStudents, totalFaculty,
     totalResources, totalCampusPosts,
     totalLostFound, pendingResources, pendingPosts, pendingOpportunities, recentUsers,
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: 'student' }),
     User.countDocuments({ role: 'faculty' }),
-    User.countDocuments({ role: 'placement' }),
     Resource.countDocuments({ approved: true }),
     CampusPost.countDocuments({ status: 'published' }),
     LostFound.countDocuments({ resolved: false }),
@@ -72,7 +71,7 @@ const getAnalytics = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     stats: {
-      totalUsers, totalStudents, totalFaculty, totalPlacement,
+      totalUsers, totalStudents, totalFaculty,
       totalResources, totalCampusPosts,
       totalLostFound,
       pendingItems: pendingResources + pendingPosts + pendingOpportunities,
@@ -187,7 +186,7 @@ const reviewResource = asyncHandler(async (req, res) => {
 // @route   PUT /api/admin/users/:id
 const adminUpdateUser = asyncHandler(async (req, res) => {
   const { role, isActive } = req.body;
-  const validRoles = ['student', 'faculty', 'placement', 'admin'];
+  const validRoles = ['student', 'faculty', 'admin'];
 
   const update = {};
   if (role && validRoles.includes(role)) update.role = role;

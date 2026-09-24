@@ -56,18 +56,21 @@ export default function GoogleProfileModal({ setupToken, prefill, onSuccess, onC
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+        style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.92, y: 20 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="w-full max-w-md rounded-2xl p-8 relative"
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-md rounded-2xl p-8 relative mx-auto my-auto max-h-[90vh] overflow-y-auto"
           style={{
+            maxWidth: '28rem',
+            width: '100%',
+            margin: 'auto',
             background: 'rgba(17, 24, 39, 0.98)',
             border: '1px solid rgba(99,102,241,0.2)',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
           }}
         >
           {/* Close button */}

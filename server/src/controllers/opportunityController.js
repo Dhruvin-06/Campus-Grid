@@ -64,7 +64,7 @@ const getOpportunityById = asyncHandler(async (req, res) => {
 
 // @desc    Create opportunity
 // @route   POST /api/opportunities
-// @access  Private/Placement/Admin
+// @access  Private/Admin
 const createOpportunity = asyncHandler(async (req, res) => {
   const {
     title, company, description, type, skills, eligibility,
@@ -87,9 +87,8 @@ const createOpportunity = asyncHandler(async (req, res) => {
     deadline: deadline ? new Date(deadline) : undefined,
     applicationLink: applicationLink || '',
     postedBy: req.user._id,
-    // Admin-created opportunities auto-verified; placement cell needs admin verify
-    isVerified: req.user.role === 'admin',
-    isPublished: req.user.role === 'admin',
+    isVerified: true,
+    isPublished: true,
   });
 
   res.status(201).json({ success: true, opportunity });
@@ -97,18 +96,17 @@ const createOpportunity = asyncHandler(async (req, res) => {
 
 // @desc    Update opportunity
 // @route   PUT /api/opportunities/:id
-// @desc    Update opportunity
-// @route   PUT /api/opportunities/:id
-// @access  Private/Placement/Admin
+// @access  Private/Admin
 const updateOpportunity = asyncHandler(async (req, res) => {
   const opp = await Opportunity.findById(req.params.id);
   if (!opp) { res.status(404); throw new Error('Opportunity not found'); }
 
-  // Only admin or the original poster (placement cell) can edit
+  // Admin or original poster can edit
   const ownerId = opp.postedBy?.toString();
   const userId = (req.user._id || req.user.id)?.toString();
-  if (req.user.role !== 'admin' && ownerId !== userId) {
-    return res.status(403).json({ success: false, message: 'Forbidden: You do not own this opportunity' });
+  const canEdit = req.user.role === 'admin' || ownerId === userId;
+  if (!canEdit) {
+    return res.status(403).json({ success: false, message: 'Forbidden: You do not have permission to edit this opportunity' });
   }
 
   const updated = await Opportunity.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -131,15 +129,16 @@ const verifyOpportunity = asyncHandler(async (req, res) => {
 
 // @desc    Delete opportunity
 // @route   DELETE /api/opportunities/:id
-// @access  Private/Placement/Admin
+// @access  Private/Admin
 const deleteOpportunity = asyncHandler(async (req, res) => {
   const opp = await Opportunity.findById(req.params.id);
   if (!opp) { res.status(404); throw new Error('Opportunity not found'); }
 
   const ownerId = opp.postedBy?.toString();
   const userId = (req.user._id || req.user.id)?.toString();
-  if (req.user.role !== 'admin' && ownerId !== userId) {
-    return res.status(403).json({ success: false, message: 'Forbidden: You do not own this opportunity' });
+  const canDelete = req.user.role === 'admin' || ownerId === userId;
+  if (!canDelete) {
+    return res.status(403).json({ success: false, message: 'Forbidden: You do not have permission to delete this opportunity' });
   }
 
   await opp.deleteOne();

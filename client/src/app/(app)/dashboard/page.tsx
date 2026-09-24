@@ -27,19 +27,19 @@ function StatKPI({
 }) {
   return (
     <Link href={href} className="block group">
-      <div className="saas-card p-4 transition-all duration-200 hover:-translate-y-0.5"
-        style={{ background: 'rgba(17, 24, 39, 0.7)' }}>
+      <div className="glass-card p-4 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden"
+        style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
         <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
-              <Icon size={14} style={{ color }} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center transition-all group-hover:scale-105"
+              style={{ background: `${color}18`, border: `1px solid ${color}35` }}>
+              <Icon size={15} style={{ color }} />
             </div>
-            <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{label}</p>
+            <p className="text-xs font-semibold text-slate-400 group-hover:text-slate-200 transition-colors">{label}</p>
           </div>
-          <ChevronRight size={12} className="opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" style={{ color }} />
+          <ChevronRight size={13} className="opacity-30 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" style={{ color }} />
         </div>
-        <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+        <p className="text-2xl font-extrabold tracking-tight text-white mt-1">
           {value ?? '—'}
         </p>
       </div>
@@ -204,24 +204,18 @@ export default function DashboardPage() {
           {user?.role === 'admin' ? (
             <>
               <StatKPI icon={GraduationCap} label="Students" value={stats?.totalStudents} color="#818CF8" href="/peers" />
-              <StatKPI icon={AlertCircle} label="Pending Resources" value={stats?.pendingResources} color="#F87171" href="/resources" />
+              <StatKPI icon={AlertCircle} label="Pending Resources" value={stats?.pendingResources} color="#F87171" href="/resources?tab=pending" />
               <StatKPI icon={CheckCircle2} label="Pending Feed Posts" value={stats?.pendingPosts} color="#FBBF24" href="/feed" />
               <StatKPI icon={Briefcase} label="Active Drives" value={stats?.totalOpportunities} color="#34D399" href="/opportunities" />
             </>
           ) : user?.role === 'faculty' ? (
             <>
               <StatKPI icon={BookOpen} label="Learning Hub" value={stats?.totalResources} color="#34D399" href="/resources" />
-              <StatKPI icon={AlertCircle} label="Pending Note Approvals" value={stats?.pendingResources} color="#F87171" href="/resources" />
+              <StatKPI icon={AlertCircle} label="Pending Note Approvals" value={stats?.pendingResources} color="#F87171" href="/resources?tab=pending" />
               <StatKPI icon={Newspaper} label="Pending Post Reviews" value={stats?.pendingPosts} color="#FBBF24" href="/feed" />
               <StatKPI icon={GraduationCap} label="Student Directory" value={stats?.totalStudents} color="#818CF8" href="/peers" />
             </>
-          ) : user?.role === 'placement' ? (
-            <>
-              <StatKPI icon={Briefcase} label="Active Drives" value={stats?.totalOpportunities} color="#FBBF24" href="/opportunities" />
-              <StatKPI icon={GraduationCap} label="Total Students" value={stats?.totalStudents} color="#818CF8" href="/peers" />
-              <StatKPI icon={Newspaper} label="Campus Notices" value={recentAnnouncements.length} color="#34D399" href="/feed" />
-              <StatKPI icon={Bell} label="Unread Alerts" value={unreadCount} color="#C084FC" href="/notifications" />
-            </>
+
           ) : (
             <>
               <StatKPI icon={Briefcase} label="Active Drives" value={stats?.totalOpportunities} color="#FBBF24" href="/opportunities" />

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
@@ -8,6 +9,11 @@ const asyncHandler = require('express-async-handler');
 const getConversation = asyncHandler(async (req, res) => {
   const { userId } = req.params;
   const { page = 1, limit = 30 } = req.query;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ success: false, message: 'Invalid target user ID' });
+  }
+
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const messages = await Message.find({
@@ -36,6 +42,10 @@ const getConversation = asyncHandler(async (req, res) => {
 // @access  Private
 const sendMessage = asyncHandler(async (req, res) => {
   const { receiverId, content } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+    return res.status(400).json({ success: false, message: 'Invalid receiver ID' });
+  }
 
   const receiver = await User.findById(receiverId);
   if (!receiver) {
@@ -94,7 +104,7 @@ const getConversations = asyncHandler(async (req, res) => {
   ]);
 
   // Populate user details
-  const populated = await Message.populate(
+  const rawPopulated = await Message.populate(
     conversations.map((c) => c.lastMessage),
     [
       { path: 'sender', select: 'name avatar rollNumber' },
@@ -102,8 +112,14 @@ const getConversations = asyncHandler(async (req, res) => {
     ]
   );
 
-  res.json({ success: true, conversations: populated });
+  // Filter out any messages where sender or receiver was deleted
+  const validConversations = rawPopulated.filter(
+    (msg) => msg && msg.sender && msg.receiver
+  );
+
+  res.json({ success: true, conversations: validConversations });
 });
+
 
 // @desc    Get unread message count
 // @route   GET /api/chat/unread-count

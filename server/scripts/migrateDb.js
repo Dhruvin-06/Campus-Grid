@@ -14,12 +14,12 @@ const migrate = async () => {
 
     console.log('--- Database Migration Started ---');
 
-    // 1. Update any user with role 'placement_cell' to 'student'
+    // 1. Update any user with role 'placement_cell' or 'placement' to 'admin'
     const updatedUsers = await User.updateMany(
-      { role: 'placement_cell' },
-      { $set: { role: 'student' } }
+      { role: { $in: ['placement_cell', 'placement'] } },
+      { $set: { role: 'admin' } }
     );
-    console.log(`Scrubbed placement_cell roles: ${updatedUsers.modifiedCount} users updated to 'student'.`);
+    console.log(`Scrubbed placement roles: ${updatedUsers.modifiedCount} users updated to 'admin'.`);
 
     // 2. Unset bookmarkedJobs field across all user documents
     const cleanedBookmarks = await User.updateMany(

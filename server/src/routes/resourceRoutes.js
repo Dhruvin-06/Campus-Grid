@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  uploadResource, getResources, getResourceById, trackDownload,
+  uploadResource, getResources, getResourceById, downloadResource, trackDownload,
   likeResource, approveResource, deleteResource, getPendingResources,
 } = require('../controllers/resourceController');
 const { protect, staffOnly } = require('../middleware/auth');
@@ -9,6 +9,7 @@ const { uploadDocument } = require('../config/upload');
 
 router.get('/', protect, getResources);
 router.get('/pending', protect, staffOnly, getPendingResources);
+router.get('/:id/download', protect, downloadResource);
 router.get('/:id', protect, getResourceById);
 router.post('/', protect, uploadDocument.single('file'), uploadResource);
 router.put('/:id/download', protect, trackDownload);

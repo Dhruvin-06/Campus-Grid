@@ -70,6 +70,10 @@ export const resourcesApi = {
   getPending: () => api.get('/resources/pending'),
   upload: (formData: any) => api.post('/resources', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   trackDownload: (id: any) => api.put(`/resources/${id}/download`),
+  getDownloadUrl: (id: any) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('campusgrid_token') : '';
+    return `${API_URL}/resources/${id}/download?token=${token}`;
+  },
   like: (id: any) => api.put(`/resources/${id}/like`),
   approve: (id: any) => api.put(`/resources/${id}/approve`),
   delete: (id: any) => api.delete(`/resources/${id}`),

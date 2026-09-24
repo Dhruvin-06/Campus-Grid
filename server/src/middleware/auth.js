@@ -9,6 +9,8 @@ const protect = async (req, res, next) => {
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.query && req.query.token) {
+    token = req.query.token;
   }
 
   if (!token) {
@@ -60,20 +62,10 @@ const adminOnly = authorize('admin');
  */
 const staffOnly = authorize('faculty', 'admin');
 
-/**
- * Placement Cell or Admin shortcut
- */
-const placementOrAdmin = authorize('placement', 'admin');
-
-/**
- * Placement Cell only (plus admin)
- */
-const placementOnly = authorize('placement', 'admin');
-
-/**
- * Faculty, Placement, or Admin shortcut
- */
-const staffAndPlacement = authorize('faculty', 'placement', 'admin');
+// Retained alias shortcuts mapped to admin / staff for compatibility
+const placementOrAdmin = adminOnly;
+const placementOnly = adminOnly;
+const staffAndPlacement = staffOnly;
 
 /**
  * Generic Ownership Middleware Factory for IDOR protection
