@@ -106,11 +106,10 @@ export default function LostFoundPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Campus Services</span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2">
-            <MapPin size={26} className="text-indigo-400" /> Lost & Found
+          <h1 className="text-xl font-bold mt-1 flex items-center gap-2">
+            <MapPin size={26} className="text-[var(--primary)]" /> Lost & Found
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[var(--text-muted)] mt-1">
             Report lost items, claim found belongings, or reach out to owners directly.
           </p>
         </div>
@@ -120,7 +119,7 @@ export default function LostFoundPage() {
       </div>
 
       {/* Filters */}
-      <div className="saas-card p-4 flex flex-wrap gap-3 items-center">
+      <div className="card p-4 flex flex-wrap gap-3 items-center">
         <div className="flex gap-2">
           {(['', 'lost', 'found'] as const).map((t) => (
             <button
@@ -157,18 +156,18 @@ export default function LostFoundPage() {
       {loading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array(6).fill(0).map((_, i) => (
-            <div key={i} className="saas-card p-5 space-y-3">
-              <div className="skeleton h-36 rounded-xl" />
-              <div className="skeleton h-4 w-3/4" />
-              <div className="skeleton h-3 w-full" />
+            <div key={i} className="card p-5 space-y-3">
+              <div className="h-36 rounded-xl animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+              <div className="h-4 w-3/4 animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+              <div className="h-3 w-full animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
             </div>
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="saas-card p-16 text-center">
-          <MapPin size={48} className="mx-auto mb-4 opacity-20 text-slate-400" />
+        <div className="card p-16 text-center">
+          <MapPin size={48} className="mx-auto mb-4 opacity-20 text-[var(--text-muted)]" />
           <p className="font-bold text-white text-base">No items posted yet</p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[var(--text-muted)] mt-1">
             Lost something? Post it here to let others help!
           </p>
         </div>
@@ -180,7 +179,7 @@ export default function LostFoundPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              className="saas-card p-0 overflow-hidden flex flex-col"
+              className="card p-0 overflow-hidden flex flex-col"
             >
               {item.imageUrl ? (
                 <img src={item.imageUrl} alt={item.title}
@@ -209,7 +208,7 @@ export default function LostFoundPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 mt-auto pt-3 border-t flex-wrap" style={{ borderColor: 'var(--border-glass)' }}>
+                <div className="flex items-center gap-2 mt-auto pt-3 border-t flex-wrap" style={{ borderColor: 'var(--border)' }}>
                   <p className="text-xs flex-1 truncate" style={{ color: 'var(--text-muted)' }}>
                     by <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{item.postedBy?.name}</span>
                   </p>
@@ -302,11 +301,11 @@ export default function LostFoundPage() {
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Image (optional)</label>
             <div className="border-2 border-dashed rounded-xl p-4 text-center transition-colors"
-              style={{ borderColor: form.image ? 'var(--color-success)' : 'var(--border-glass)' }}>
+              style={{ borderColor: form.image ? 'var(--success)' : 'var(--border)' }}>
               <input id="lf-image" type="file" accept="image/*" className="hidden"
                 onChange={(e) => setForm({ ...form, image: e.target.files?.[0] || null })} />
               {form.image ? (
-                <p className="text-sm" style={{ color: 'var(--color-success)' }}>✅ {form.image.name}</p>
+                <p className="text-sm" style={{ color: 'var(--success)' }}>✅ {form.image.name}</p>
               ) : (
                 <label htmlFor="lf-image" className="cursor-pointer">
                   <Camera size={24} className="mx-auto mb-1 opacity-40" />

@@ -4,7 +4,7 @@ A full-stack campus management platform built with **Next.js 15** (frontend) and
 
 ## 🚀 Features
 
-- 🔐 JWT + Google OAuth authentication with role-based access (Student, Faculty, Admin, Placement Cell)
+- 🔐 JWT + Google OAuth authentication with role-based access (Student, Faculty, Admin)
 - 📢 Announcements & campus blogs
 - 📚 Resource Vault — upload, approve, download study materials
 - 💼 Placement / Internship job board

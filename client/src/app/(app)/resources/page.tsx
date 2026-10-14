@@ -17,12 +17,12 @@ import {
 const BRANCHES = ['All', 'CSE', 'ECE', 'ME', 'CE', 'EEE', 'IT', 'AIDS', 'AIML', 'Other'];
 const TYPES = [
   { value: '', label: 'All Types' },
-  { value: 'notes', label: '📝 Notes' },
-  { value: 'pyq', label: '📄 PYQ' },
-  { value: 'assignment', label: '📋 Assignment' },
-  { value: 'reference', label: '📚 Reference' },
-  { value: 'lab_manual', label: '🔬 Lab Manual' },
-  { value: 'other', label: '📎 Other' },
+  { value: 'notes', label: 'Notes' },
+  { value: 'pyq', label: 'PYQ' },
+  { value: 'assignment', label: 'Assignment' },
+  { value: 'reference', label: 'Reference' },
+  { value: 'lab_manual', label: 'Lab Manual' },
+  { value: 'other', label: 'Other' },
 ];
 
 export default function ResourcesPage() {
@@ -119,7 +119,7 @@ export default function ResourcesPage() {
 
       await resourcesApi.upload(fd);
       const isStaff = user?.role === 'admin' || user?.role === 'faculty';
-      toast.success(isStaff ? 'Resource uploaded and published!' : 'Resource submitted! It will be visible after approval.');
+      toast.success(isStaff ? 'Resource uploaded and published!' : 'Resource submitted for review.');
       setShowUpload(false);
       setUploadForm({
         title: '', description: '', subject: '', branch: 'CSE',
@@ -138,7 +138,7 @@ export default function ResourcesPage() {
     setActionLoadingId(id);
     try {
       await resourcesApi.approve(id);
-      toast.success('Resource approved & published live! 🎉');
+      toast.success('Resource approved & published!');
       setPendingResources((prev) => prev.filter((r) => r._id !== id));
       fetchResources();
     } catch (err: any) {
@@ -175,65 +175,49 @@ export default function ResourcesPage() {
     window.open(downloadUrl, '_blank');
   };
 
-  const typeColors: Record<string, string> = {
-    notes: 'badge-primary', pyq: 'badge-accent', assignment: 'badge-warning',
-    reference: 'badge-success', lab_manual: 'badge-danger', other: 'badge-primary',
-  };
-
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2.5 text-white">
-            <BookOpen size={28} className="text-indigo-400" />
+          <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <BookOpen size={20} style={{ color: 'var(--primary)' }} />
             Learning Hub
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Your verified academic knowledge base · {total} resources available
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            {total} resources available
           </p>
         </div>
-        {canUpload ? (
-          <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Upload Resource
-          </button>
-        ) : (
-          <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Submit Resource
-          </button>
-        )}
+        <button id="upload-resource-btn" onClick={() => setShowUpload(true)} className="btn-primary text-sm">
+          <Plus size={16} /> {canUpload ? 'Upload Resource' : 'Submit Resource'}
+        </button>
       </div>
 
-      {/* Staff Tabs (Admin / Faculty) */}
+      {/* Tabs */}
       {canUpload && (
-        <div className="flex items-center gap-2 border-b pb-3" style={{ borderColor: 'var(--border-subtle, rgba(255,255,255,0.08))' }}>
+        <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
           <button
             onClick={() => setActiveTab('published')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-              activeTab === 'published' ? 'text-white' : 'text-slate-400 hover:text-white'
-            }`}
+            className="flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
             style={{
-              background: activeTab === 'published' ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${activeTab === 'published' ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
-              color: activeTab === 'published' ? '#a5b4fc' : 'var(--text-muted)',
+              background: activeTab === 'published' ? 'var(--surface)' : 'transparent',
+              color: activeTab === 'published' ? 'var(--text-primary)' : 'var(--text-muted)',
             }}
           >
-            <BookOpen size={16} /> Published Resources ({total})
+            <BookOpen size={14} /> Published ({total})
           </button>
           <button
             onClick={() => setActiveTab('pending')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-              activeTab === 'pending' ? 'text-white' : 'text-slate-400 hover:text-white'
-            }`}
+            className="flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
             style={{
-              background: activeTab === 'pending' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${activeTab === 'pending' ? '#ef4444' : 'rgba(255,255,255,0.08)'}`,
-              color: activeTab === 'pending' ? '#f87171' : 'var(--text-muted)',
+              background: activeTab === 'pending' ? 'var(--surface)' : 'transparent',
+              color: activeTab === 'pending' ? 'var(--text-primary)' : 'var(--text-muted)',
             }}
           >
-            <Clock size={16} /> Pending Approvals
+            <Clock size={14} /> Pending
             {pendingResources.length > 0 && (
-              <span className="px-2 py-0.5 text-xs rounded-full bg-red-500 text-white font-bold animate-pulse">
+              <span className="px-1.5 py-0.5 text-xs rounded font-medium"
+                style={{ background: 'var(--danger-muted)', color: 'var(--danger)' }}>
                 {pendingResources.length}
               </span>
             )}
@@ -245,11 +229,11 @@ export default function ResourcesPage() {
       {activeTab === 'published' && (
         <>
           {/* Search + Filters */}
-          <div className="saas-card p-4">
+          <div className="card p-4">
             <div className="flex flex-wrap gap-3">
-              <div className="relative flex-1 min-w-48">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-                <input id="resource-search" type="text" placeholder="Search notes, PDFs, previous papers..."
+                <input id="resource-search" type="text" placeholder="Search resources..."
                   className="w-full pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <select id="resource-branch-filter" className="input-field w-auto" value={branch} onChange={(e) => setBranch(e.target.value)}>
@@ -265,48 +249,46 @@ export default function ResourcesPage() {
             </div>
           </div>
 
-          {/* Resources Grid */}
+          {/* Grid */}
           {loading ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {Array(8).fill(0).map((_, i) => (
-                <div key={i} className="glass-card p-5 space-y-3">
-                  <div className="skeleton h-5 w-3/4" />
-                  <div className="skeleton h-4 w-full" />
-                  <div className="skeleton h-4 w-1/2" />
+                <div key={i} className="card p-5 space-y-3">
+                  <div className="h-5 w-3/4 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+                  <div className="h-4 w-full rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+                  <div className="h-4 w-1/2 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
                 </div>
               ))}
             </div>
           ) : resources.length === 0 ? (
-            <div className="glass-card p-16 text-center">
-              <BookOpen size={48} className="mx-auto mb-4 opacity-20" />
-              <p className="font-semibold">No resources found</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Try adjusting your filters or upload the first one!</p>
+            <div className="card p-12 text-center">
+              <BookOpen size={40} className="mx-auto mb-3 opacity-20" />
+              <p className="font-medium" style={{ color: 'var(--text-primary)' }}>No resources found</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Try adjusting your filters or upload the first one!</p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {resources.map((resource, i) => (
                 <motion.div
                   key={resource._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="glass-card p-5 flex flex-col gap-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="card p-4 flex flex-col gap-3"
                 >
-                  {/* Icon + Type badge */}
                   <div className="flex items-start justify-between">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center"
-                      style={{ background: 'rgba(99,102,241,0.15)' }}>
-                      <FileText size={22} style={{ color: 'var(--color-primary)' }} />
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+                      style={{ background: 'var(--primary-muted)' }}>
+                      <FileText size={18} style={{ color: 'var(--primary)' }} />
                     </div>
-                    <span className={`badge ${typeColors[resource.type] || 'badge-primary'}`}>
+                    <span className="badge badge-primary text-xs capitalize">
                       {resource.type.replace('_', ' ')}
                     </span>
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1">
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-1">{resource.title}</h3>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    <h3 className="font-medium text-sm line-clamp-2 mb-1" style={{ color: 'var(--text-primary)' }}>{resource.title}</h3>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                       {resource.subject} · {resource.branch}{resource.year ? ` · Y${resource.year}` : ''}
                     </p>
                     {resource.tags && resource.tags.length > 0 && (
@@ -318,13 +300,11 @@ export default function ResourcesPage() {
                     )}
                   </div>
 
-                  {/* Uploader */}
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                     by {typeof resource.uploadedBy === 'object' ? (resource.uploadedBy?.name || 'Anonymous') : 'Anonymous'}
                   </p>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-glass)' }}>
+                  <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
                     <button
                       onClick={() => setPreviewItem({
                         id: resource._id,
@@ -334,7 +314,7 @@ export default function ResourcesPage() {
                         subject: resource.subject,
                         branch: resource.branch,
                       })}
-                      className="btn-secondary py-1.5 px-2.5 text-xs flex items-center justify-center gap-1"
+                      className="btn-secondary py-1.5 px-2.5 text-xs"
                       title="Preview Document"
                     >
                       <Eye size={13} /> Preview
@@ -342,15 +322,15 @@ export default function ResourcesPage() {
                     <button
                       id={`download-${resource._id}`}
                       onClick={() => handleDownload(resource)}
-                      className="btn-primary flex-1 py-1.5 text-xs flex items-center justify-center gap-1"
+                      className="btn-primary flex-1 py-1.5 text-xs"
                     >
                       <Download size={13} /> Download
                     </button>
                     <button
                       id={`like-${resource._id}`}
                       onClick={() => handleLike(resource._id)}
-                      className="p-2 rounded-xl transition-colors hover:bg-white/5 flex items-center gap-1 text-xs"
-                      style={{ color: 'var(--text-secondary)' }}
+                      className="p-1.5 rounded-md transition-colors hover:bg-white/5 flex items-center gap-1 text-xs"
+                      style={{ color: 'var(--text-muted)' }}
                     >
                       <Heart size={14} /> {resource.likes?.length || 0}
                     </button>
@@ -362,104 +342,88 @@ export default function ResourcesPage() {
         </>
       )}
 
-      {/* PENDING APPROVALS TAB (Admin / Faculty) */}
+      {/* PENDING TAB */}
       {activeTab === 'pending' && canUpload && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Clock size={20} className="text-amber-400" />
-                Pending Resource Submissions ({pendingResources.length})
+              <h2 className="text-base font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                <Clock size={16} style={{ color: '#eab308' }} />
+                Pending Submissions ({pendingResources.length})
               </h2>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                Review student-submitted study material before it goes live to campus.
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Review student submissions before publishing.
               </p>
             </div>
-            <button
-              onClick={fetchPendingResources}
-              className="btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
-            >
+            <button onClick={fetchPendingResources} className="btn-secondary text-xs py-1.5 px-3">
               <RefreshCw size={13} className={loadingPending ? 'animate-spin' : ''} /> Refresh
             </button>
           </div>
 
           {loadingPending ? (
             <div className="py-12 text-center">
-              <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-indigo-400" />
-              <p className="text-xs text-slate-400">Loading pending submissions...</p>
+              <RefreshCw size={20} className="animate-spin mx-auto mb-2" style={{ color: 'var(--primary)' }} />
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Loading pending submissions...</p>
             </div>
           ) : pendingResources.length === 0 ? (
-            <div className="glass-card p-12 text-center border border-emerald-500/20 bg-emerald-500/5">
-              <CheckCircle2 size={40} className="mx-auto mb-3 text-emerald-400" />
-              <h3 className="font-semibold text-lg text-white">No Pending Submissions</h3>
-              <p className="text-sm text-slate-400 mt-1">All resource submissions are approved and up to date! 🎉</p>
+            <div className="card p-12 text-center">
+              <CheckCircle2 size={32} className="mx-auto mb-3" style={{ color: 'var(--success)' }} />
+              <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>No Pending Submissions</h3>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>All submissions are reviewed.</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {pendingResources.map((r) => (
-                <div
-                  key={r._id}
-                  className="glass-card p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-amber-500/20"
-                >
-                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/15 border border-amber-500/30">
-                      <FileText size={20} className="text-amber-400" />
+                <div key={r._id} className="card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'var(--warning-muted)' }}>
+                      <FileText size={18} style={{ color: '#eab308' }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-base text-white">{r.title}</h3>
-                        <span className="badge badge-warning text-[10px] uppercase font-bold tracking-wider">
-                          {r.type}
-                        </span>
+                        <h3 className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{r.title}</h3>
+                        <span className="badge badge-warning text-xs uppercase">{r.type}</span>
                       </div>
-                      <p className="text-xs text-indigo-300 mt-0.5">
-                        Subject: <strong className="text-white">{r.subject}</strong> · Branch: {r.branch} {r.year ? `· Year ${r.year}` : ''}
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                        {r.subject} · {r.branch} {r.year ? `· Year ${r.year}` : ''}
                       </p>
                       {r.description && (
-                        <p className="text-xs text-slate-300 mt-1 line-clamp-2 bg-black/20 p-2 rounded-lg border border-white/5">
+                        <p className="text-xs mt-1 line-clamp-2 p-2 rounded-md" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
                           {r.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
-                        <span>Submitted by: <strong className="text-slate-200">{r.uploadedBy?.name || 'Student'}</strong> ({r.uploadedBy?.rollNumber || 'N/A'})</span>
-                        {r.fileSize && <span>File Size: {(r.fileSize / 1024 / 1024).toFixed(2)} MB</span>}
-                      </div>
+                      <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
+                        By {r.uploadedBy?.name || 'Student'} ({r.uploadedBy?.rollNumber || 'N/A'})
+                        {r.fileSize && ` · ${(r.fileSize / 1024 / 1024).toFixed(2)} MB`}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-white/10">
+                  <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0" style={{ borderTop: '1px solid var(--border)' }}>
                     <button
-                      onClick={() => setPreviewItem({
-                        id: r._id,
-                        title: r.title,
-                        fileUrl: r.fileUrl,
-                        fileName: r.fileName,
-                        subject: r.subject,
-                        branch: r.branch,
-                      })}
-                      className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5"
+                      onClick={() => setPreviewItem({ id: r._id, title: r.title, fileUrl: r.fileUrl, fileName: r.fileName, subject: r.subject, branch: r.branch })}
+                      className="btn-secondary py-1.5 px-3 text-xs"
                     >
-                      <Eye size={14} /> Preview File
+                      <Eye size={14} /> Preview
                     </button>
                     <button
                       onClick={() => handleReject(r._id)}
                       disabled={actionLoadingId === r._id}
-                      className="px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 flex items-center gap-1.5 transition-all"
+                      className="btn-danger py-1.5 px-3 text-xs"
                     >
                       <X size={14} /> Reject
                     </button>
                     <button
                       onClick={() => handleApprove(r._id)}
                       disabled={actionLoadingId === r._id}
-                      className="px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/20"
+                      className="py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+                      style={{ background: 'var(--success)', color: '#fff' }}
                     >
                       {actionLoadingId === r._id ? (
                         <RefreshCw size={14} className="animate-spin" />
                       ) : (
-                        <>
-                          <Check size={14} /> Approve & Publish
-                        </>
+                        <><Check size={14} /> Approve</>
                       )}
                     </button>
                   </div>
@@ -471,27 +435,27 @@ export default function ResourcesPage() {
       )}
 
       {/* Upload Modal */}
-      <Modal isOpen={showUpload} onClose={() => setShowUpload(false)} title={canUpload ? 'Upload Resource' : 'Submit Resource for Review'} maxWidth="max-w-lg">
+      <Modal isOpen={showUpload} onClose={() => setShowUpload(false)} title={canUpload ? 'Upload Resource' : 'Submit Resource'} maxWidth="max-w-lg">
         {!canUpload && (
-          <div className="mb-4 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}>
-            📋 Your submission will be reviewed by admin before it goes live.
+          <div className="mb-4 px-3 py-2 rounded-lg text-sm" style={{ background: 'var(--info-muted)', color: '#60a5fa' }}>
+            Your submission will be reviewed before it goes live.
           </div>
         )}
 
         <form onSubmit={handleUpload} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Title *</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Title *</label>
             <input id="upload-title" type="text" required placeholder="e.g. Data Structures - Unit 3 Notes" className="input-field"
               value={uploadForm.title} onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Subject *</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Subject *</label>
               <input id="upload-subject" type="text" required placeholder="e.g. Data Structures" className="input-field"
                 value={uploadForm.subject} onChange={(e) => setUploadForm({ ...uploadForm, subject: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Type</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Type</label>
               <select id="upload-type" className="input-field" value={uploadForm.type}
                 onChange={(e) => setUploadForm({ ...uploadForm, type: e.target.value })}>
                 {TYPES.slice(1).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -500,14 +464,14 @@ export default function ResourcesPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Branch</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Branch</label>
               <select id="upload-branch" className="input-field" value={uploadForm.branch}
                 onChange={(e) => setUploadForm({ ...uploadForm, branch: e.target.value })}>
                 {BRANCHES.slice(1).map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Year</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Year</label>
               <select id="upload-year" className="input-field" value={uploadForm.year}
                 onChange={(e) => setUploadForm({ ...uploadForm, year: e.target.value })}>
                 <option value="">All Years</option>
@@ -516,33 +480,34 @@ export default function ResourcesPage() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tags (comma-separated)</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tags (comma-separated)</label>
             <input id="upload-tags" type="text" placeholder="e.g. trees, sorting, graphs" className="input-field"
               value={uploadForm.tags} onChange={(e) => setUploadForm({ ...uploadForm, tags: e.target.value })} />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>File * (PDF, DOC, PPT — max 25MB)</label>
-            <div className="border-2 border-dashed rounded-xl p-6 text-center transition-colors"
-              style={{ borderColor: uploadForm.file ? 'var(--color-success)' : 'var(--border-glass)' }}>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>File * (PDF, DOC, PPT — max 25MB)</label>
+            <div className="border-2 border-dashed rounded-lg p-6 text-center transition-colors"
+              style={{ borderColor: uploadForm.file ? 'var(--success)' : 'var(--border)' }}>
               <input id="upload-file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
                 className="hidden" onChange={(e) => setUploadForm({ ...uploadForm, file: e.target.files?.[0] || null })} />
               {uploadForm.file ? (
-                <div className="text-sm" style={{ color: 'var(--color-success)' }}>
+                <div className="text-sm" style={{ color: 'var(--success)' }}>
                   ✅ {uploadForm.file.name} ({(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB)
                 </div>
               ) : (
                 <label htmlFor="upload-file" className="cursor-pointer">
-                  <Upload size={28} className="mx-auto mb-2 opacity-40" />
-                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Click to select a file</p>
+                  <Upload size={24} className="mx-auto mb-2 opacity-30" />
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Click to select a file</p>
                 </label>
               )}
             </div>
           </div>
-          <button id="upload-submit" type="submit" disabled={uploading} className="btn-primary w-full flex items-center justify-center gap-2">
-            {uploading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Upload Resource'}
+          <button id="upload-submit" type="submit" disabled={uploading} className="btn-primary w-full">
+            {uploading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Upload Resource'}
           </button>
         </form>
       </Modal>
+
       {/* File Preview Modal */}
       {previewItem && (
         <FilePreviewModal

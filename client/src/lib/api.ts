@@ -79,12 +79,6 @@ export const resourcesApi = {
   delete: (id: any) => api.delete(`/resources/${id}`),
 };
 
-// ─── AI Document Assistant ─────────────────────────────────────────────────────
-export const aiApi = {
-  ask: (data: { question: string; resourceId?: string; subject?: string; branch?: string }) =>
-    api.post('/ai/ask', data),
-  suggest: (resourceId: string) => api.post('/ai/suggest', { resourceId }),
-};
 
 // ─── Career Opportunities ──────────────────────────────────────────────────────
 export const opportunitiesApi = {
@@ -108,7 +102,7 @@ export const chatApi = {
 
 // ─── Campus Feed & Announcements ───────────────────────────────────────────────
 export const contentApi = {
-  // Announcements (admin/faculty/placement)
+  // Announcements (admin/faculty)
   getAnnouncements: (params?: any) => api.get('/announcements', { params }),
   createAnnouncement: (data: any) => api.post('/announcements', data),
   updateAnnouncement: (id: any, data: any) => api.put(`/announcements/${id}`, data),

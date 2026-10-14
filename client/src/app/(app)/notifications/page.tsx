@@ -18,10 +18,10 @@ interface Notification {
 }
 
 const typeConfig = {
-  info:    { color: '#6366f1', bg: 'rgba(99,102,241,0.1)',  Icon: Info },
-  success: { color: '#10b981', bg: 'rgba(16,185,129,0.1)',  Icon: CheckCircle2 },
-  warning: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  Icon: AlertTriangle },
-  error:   { color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   Icon: X },
+  info:    { color: '#818cf8', bg: 'var(--primary-muted)', Icon: Info },
+  success: { color: '#4ade80', bg: 'var(--success-muted)', Icon: CheckCircle2 },
+  warning: { color: '#fbbf24', bg: 'var(--warning-muted)', Icon: AlertTriangle },
+  error:   { color: '#f87171', bg: 'var(--danger-muted)',  Icon: X },
 };
 
 function timeAgo(dateStr: string) {
@@ -47,25 +47,24 @@ function NotificationItem({ notif, onMarkRead, onDelete }: {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 12, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0 }}
-      className="flex items-start gap-4 p-4 rounded-xl group relative transition-all"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      className="flex items-start gap-3 p-3 rounded-lg group transition-colors"
       style={{
-        background: notif.read ? 'rgba(255,255,255,0.02)' : 'rgba(99,102,241,0.06)',
-        border: `1px solid ${notif.read ? 'rgba(255,255,255,0.05)' : 'rgba(99,102,241,0.2)'}`,
+        background: notif.read ? 'transparent' : 'var(--primary-muted)',
+        border: `1px solid ${notif.read ? 'var(--border)' : 'rgba(99,102,241,0.15)'}`,
       }}
     >
       {/* Unread dot */}
       {!notif.read && (
-        <div className="absolute top-4 left-4 w-2 h-2 rounded-full"
-          style={{ background: '#6366f1' }} />
+        <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ background: 'var(--primary)' }} />
       )}
 
       {/* Icon */}
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${!notif.read ? 'ml-3' : ''}`}
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
         style={{ background: cfg.bg }}>
-        <Icon size={16} style={{ color: cfg.color }} />
+        <Icon size={14} style={{ color: cfg.color }} />
       </div>
 
       {/* Content */}
@@ -73,28 +72,24 @@ function NotificationItem({ notif, onMarkRead, onDelete }: {
         <p className="text-sm leading-relaxed" style={{ color: notif.read ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
           {notif.message}
         </p>
-        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
           {timeAgo(notif.createdAt)}
         </p>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
         {!notif.read && (
-          <button
-            onClick={() => onMarkRead(notif._id)}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-all"
-            title="Mark as read"
-          >
-            <CheckCheck size={14} style={{ color: '#10b981' }} />
+          <button onClick={() => onMarkRead(notif._id)}
+            className="p-1.5 rounded-md hover:bg-white/5 transition-colors"
+            title="Mark as read" aria-label="Mark as read">
+            <CheckCheck size={14} style={{ color: 'var(--success)' }} />
           </button>
         )}
-        <button
-          onClick={() => onDelete(notif._id)}
-          className="p-1.5 rounded-lg hover:bg-white/10 transition-all"
-          title="Delete"
-        >
-          <Trash2 size={14} style={{ color: '#f87171' }} />
+        <button onClick={() => onDelete(notif._id)}
+          className="p-1.5 rounded-md hover:bg-white/5 transition-colors"
+          title="Delete" aria-label="Delete notification">
+          <Trash2 size={14} style={{ color: 'var(--danger)' }} />
         </button>
       </div>
     </motion.div>
@@ -140,7 +135,7 @@ export default function NotificationsPage() {
       await notificationsApi.markAllRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
-      toast.success('All notifications marked as read');
+      toast.success('All marked as read');
     } catch {
       toast.error('Failed to mark all as read');
     }
@@ -172,30 +167,25 @@ export default function NotificationsPage() {
   const displayed = filter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Activity & Alerts</span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2">
-            <Bell size={26} className="text-indigo-400" /> Notifications
+          <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Bell size={20} style={{ color: 'var(--primary)' }} /> Notifications
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            {unreadCount > 0 ? `${unreadCount} unread updates requiring attention` : 'All caught up! No unread notifications.'}
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <button onClick={handleMarkAllRead}
-              className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-xl transition-all hover:bg-white/5"
-              style={{ color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
+            <button onClick={handleMarkAllRead} className="btn-secondary text-xs py-1.5 px-3">
               <CheckCheck size={14} /> Mark all read
             </button>
           )}
           {notifications.length > 0 && (
-            <button onClick={handleClearAll}
-              className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-xl transition-all hover:bg-white/5"
-              style={{ color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' }}>
+            <button onClick={handleClearAll} className="btn-danger text-xs py-1.5 px-3">
               <Trash2 size={14} /> Clear all
             </button>
           )}
@@ -203,52 +193,41 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
         {(['all', 'unread'] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all ${filter === f ? 'text-white' : ''}`}
+            className="px-3 py-1.5 rounded-md text-sm font-medium capitalize transition-colors"
             style={{
-              background: filter === f ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${filter === f ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
-              color: filter === f ? '#a5b4fc' : 'var(--text-muted)',
+              background: filter === f ? 'var(--surface)' : 'transparent',
+              color: filter === f ? 'var(--text-primary)' : 'var(--text-muted)',
             }}>
             {f === 'unread' ? `Unread (${unreadCount})` : 'All'}
           </button>
         ))}
       </div>
 
-      {/* Notification list */}
+      {/* List */}
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-xl animate-pulse"
-              style={{ background: 'rgba(255,255,255,0.03)' }} />
+            <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
           ))}
         </div>
       ) : displayed.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="text-center py-20">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'rgba(99,102,241,0.1)' }}>
-            <Bell size={28} style={{ color: '#6366f1' }} />
-          </div>
-          <h3 className="font-semibold text-lg mb-2">
+        <div className="text-center py-16">
+          <Bell size={32} className="mx-auto mb-3 opacity-20" />
+          <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>
             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
           </h3>
-          <p style={{ color: 'var(--text-muted)' }} className="text-sm">
-            {filter === 'unread' ? "You're all caught up! 🎉" : "Notifications about opportunities, connections, and updates will appear here."}
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            {filter === 'unread' ? "You're all caught up!" : 'Notifications will appear here.'}
           </p>
-        </motion.div>
+        </div>
       ) : (
         <motion.div layout className="space-y-2">
           <AnimatePresence mode="popLayout">
             {displayed.map((notif) => (
-              <NotificationItem
-                key={notif._id}
-                notif={notif}
-                onMarkRead={handleMarkRead}
-                onDelete={handleDelete}
-              />
+              <NotificationItem key={notif._id} notif={notif} onMarkRead={handleMarkRead} onDelete={handleDelete} />
             ))}
           </AnimatePresence>
         </motion.div>

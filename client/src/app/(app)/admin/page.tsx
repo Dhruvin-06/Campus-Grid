@@ -235,7 +235,7 @@ export default function AdminPage() {
           <Shield size={20} className="text-red-400" />
         </div>
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">Admin Console</h1>
+          <h1 className="text-xl font-bold">Admin Console</h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Operations console & moderation management.</p>
         </div>
         {s && (s.pendingResources + s.pendingPosts + s.pendingOpportunities) > 0 && (
@@ -302,7 +302,7 @@ export default function AdminPage() {
               <div
                 key={label}
                 onClick={onClick}
-                className="card-glass rounded-xl p-4 cursor-pointer transition-all hover:scale-105 hover:-translate-y-1 group"
+                className="card rounded-xl p-4 cursor-pointer transition-all hover:scale-105 hover:-translate-y-1 group"
                 style={{ border: '1px solid rgba(255,255,255,0.08)' }}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">
@@ -319,7 +319,7 @@ export default function AdminPage() {
 
           {/* Branch distribution */}
           {analytics?.branchDistribution?.length > 0 && (
-            <div className="card-glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="card rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <BarChart2 size={16} style={{ color: '#6366f1' }} /> Branch Distribution
               </h3>
@@ -330,7 +330,7 @@ export default function AdminPage() {
                     <div key={b._id} className="flex items-center gap-3">
                       <span className="text-sm w-16 flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>{b._id}</span>
                       <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                        <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--gradient-primary)' }} />
+                        <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--primary)' }} />
                       </div>
                       <span className="text-xs w-16 text-right" style={{ color: 'var(--text-muted)' }}>{b.count} ({pct}%)</span>
                     </div>
@@ -354,7 +354,7 @@ export default function AdminPage() {
           ) : (
             <div className="space-y-3">
               {pendingResources.map((r) => (
-                <div key={r._id} className="card-glass rounded-xl p-4 flex items-start gap-4"
+                <div key={r._id} className="card rounded-xl p-4 flex items-start gap-4"
                   style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: 'rgba(99,102,241,0.15)' }}>
@@ -378,7 +378,7 @@ export default function AdminPage() {
                       Preview
                     </button>
                     <button onClick={() => reviewResource(r._id, 'approve')}
-                      className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg transition-all hover:bg-emerald-500/20"
+                      className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg transition-all hover:bg-[var(--success-muted)]"
                       style={{ color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
                       <CheckCircle size={12} /> Approve
                     </button>
@@ -407,7 +407,7 @@ export default function AdminPage() {
           ) : (
             <div className="space-y-3">
               {pendingPosts.map((p) => (
-                <div key={p._id} className="card-glass rounded-xl p-4 flex items-start gap-4"
+                <div key={p._id} className="card rounded-xl p-4 flex items-start gap-4"
                   style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm">{p.title}</p>
@@ -418,7 +418,7 @@ export default function AdminPage() {
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     <button onClick={() => reviewPost(p._id, 'approve')}
-                      className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg transition-all hover:bg-emerald-500/20"
+                      className="flex items-center gap-1 text-xs px-3 py-1 rounded-lg transition-all hover:bg-[var(--success-muted)]"
                       style={{ color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}>
                       <CheckCircle size={12} /> Publish
                     </button>
@@ -445,13 +445,13 @@ export default function AdminPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setOppFilter('pending')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${oppFilter === 'pending' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-white/5 text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${oppFilter === 'pending' ? 'bg-[rgba(234,179,8,0.1)] text-[#eab308] border border-[rgba(234,179,8,0.3)]' : 'bg-white/5 text-[var(--text-muted)]'}`}
               >
                 Pending Review
               </button>
               <button
                 onClick={() => setOppFilter('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${oppFilter === 'all' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40' : 'bg-white/5 text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${oppFilter === 'all' ? 'bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--primary)]' : 'bg-white/5 text-[var(--text-muted)]'}`}
               >
                 All Opportunities
               </button>
@@ -468,7 +468,7 @@ export default function AdminPage() {
           ) : (
             <div className="space-y-3">
               {pendingOpportunities.map((o) => (
-                <div key={o._id} className="card-glass rounded-xl p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+                <div key={o._id} className="card rounded-xl p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
                   style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -478,15 +478,15 @@ export default function AdminPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold text-sm text-white">{o.title}</p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${o.isVerified ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${o.isVerified ? 'bg-[var(--success-muted)] text-[var(--success)] border border-emerald-500/30' : 'bg-[rgba(234,179,8,0.1)] text-amber-400 border border-amber-500/30'}`}>
                           {o.isVerified ? 'Verified' : 'Pending'}
                         </span>
                       </div>
-                      <p className="text-xs mt-0.5 text-slate-400">
-                        {o.company} · {o.type} · Posted by <strong className="text-slate-200">{o.postedBy?.name || 'Admin'}</strong>
+                      <p className="text-xs mt-0.5 text-[var(--text-muted)]">
+                        {o.company} · {o.type} · Posted by <strong className="text-[var(--text-primary)]">{o.postedBy?.name || 'Admin'}</strong>
                       </p>
                       {o.description && (
-                        <p className="text-xs text-slate-300 mt-1 line-clamp-2 bg-black/20 p-2 rounded-lg border border-white/5">
+                        <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2 bg-[var(--bg-secondary)] p-2 rounded-lg ">
                           {o.description}
                         </p>
                       )}
@@ -503,13 +503,13 @@ export default function AdminPage() {
                   <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                     <button
                       onClick={() => setEditingOpp(o)}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 border border-indigo-500/30"
+                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-indigo-500/15 text-[var(--primary)] hover:bg-indigo-500/25 border border-[var(--primary)]"
                     >
                       <Pencil size={12} /> Edit
                     </button>
                     {!o.isVerified && (
                       <button onClick={() => verifyOpportunity(o._id, 'verify')}
-                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30">
+                        className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-all bg-emerald-500/15 text-[var(--success)] hover:bg-emerald-500/25 border border-emerald-500/30">
                         <CheckCircle size={12} /> Verify & Publish
                       </button>
                     )}
@@ -558,10 +558,10 @@ export default function AdminPage() {
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{usersTotal} users found</p>
           <div className="space-y-2">
             {users.map((u) => (
-              <div key={u._id} className="card-glass rounded-xl p-3 flex items-center gap-3"
+              <div key={u._id} className="card rounded-xl p-3 flex items-center gap-3"
                 style={{ border: '1px solid rgba(255,255,255,0.06)', opacity: u.isActive ? 1 : 0.6 }}>
                 <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-bold text-white flex-shrink-0"
-                  style={{ background: 'var(--gradient-primary)' }}>
+                  style={{ background: 'var(--primary)' }}>
                   {u.avatar ? <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" /> : u.name?.[0]}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -575,11 +575,16 @@ export default function AdminPage() {
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
-                <button onClick={() => toggleActive(u._id, u.isActive)}
-                  className={`text-xs px-2 py-1 rounded-lg transition-all ${u.isActive ? 'text-emerald-400' : 'text-red-400'}`}
-                  style={{ border: `1px solid ${u.isActive ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` }}>
-                  {u.isActive ? 'Active' : 'Inactive'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${u.isActive ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                    {u.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <button onClick={() => toggleActive(u._id, u.isActive)}
+                    className={`text-xs px-2 py-1 rounded-lg transition-all ${u.isActive ? 'text-[var(--danger)] bg-[var(--danger-muted)] hover:bg-red-500/20' : 'text-[var(--success)] bg-[var(--success-muted)] hover:bg-emerald-500/20'}`}
+                    title={u.isActive ? 'Deactivate User' : 'Activate User'}>
+                    {u.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -597,7 +602,7 @@ export default function AdminPage() {
               <div key={log._id} className="flex items-start gap-3 p-3 rounded-xl"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center font-bold text-white flex-shrink-0"
-                  style={{ background: 'var(--gradient-primary)' }}>
+                  style={{ background: 'var(--primary)' }}>
                   {log.adminId?.avatar ? <img src={log.adminId.avatar} className="w-full h-full object-cover" /> : log.adminName?.[0]}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -647,30 +652,30 @@ export default function AdminPage() {
         <Modal isOpen={!!editingOpp} onClose={() => setEditingOpp(null)} title="Edit Opportunity" maxWidth="max-w-lg">
           <form onSubmit={handleUpdateOpp} className="space-y-3 text-xs">
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Title *</label>
+              <label className="block text-[var(--text-secondary)] font-medium mb-1">Title *</label>
               <input
                 required
                 value={editingOpp.title || ''}
                 onChange={(e) => setEditingOpp({ ...editingOpp, title: e.target.value })}
-                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-[var(--border)] text-white outline-none"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Company *</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">Company *</label>
                 <input
                   required
                   value={editingOpp.company || ''}
                   onChange={(e) => setEditingOpp({ ...editingOpp, company: e.target.value })}
-                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-[var(--border)] text-white outline-none"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Type</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">Type</label>
                 <select
                   value={editingOpp.type || 'placement'}
                   onChange={(e) => setEditingOpp({ ...editingOpp, type: e.target.value })}
-                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-[var(--border)] text-white outline-none"
                 >
                   <option value="placement">Placement</option>
                   <option value="internship">Internship</option>
@@ -679,46 +684,46 @@ export default function AdminPage() {
               </div>
             </div>
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Description *</label>
+              <label className="block text-[var(--text-secondary)] font-medium mb-1">Description *</label>
               <textarea
                 required
                 rows={3}
                 value={editingOpp.description || ''}
                 onChange={(e) => setEditingOpp({ ...editingOpp, description: e.target.value })}
-                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-[var(--border)] text-white outline-none"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Stipend / Package</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">Stipend / Package</label>
                 <input
                   value={editingOpp.packageOrStipend || ''}
                   onChange={(e) => setEditingOpp({ ...editingOpp, packageOrStipend: e.target.value })}
-                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-[var(--border)] text-white outline-none"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Location</label>
+                <label className="block text-[var(--text-secondary)] font-medium mb-1">Location</label>
                 <input
                   value={editingOpp.location || ''}
                   onChange={(e) => setEditingOpp({ ...editingOpp, location: e.target.value })}
-                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                  className="w-full p-2.5 rounded-lg bg-slate-900 border border-[var(--border)] text-white outline-none"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Application Link</label>
+              <label className="block text-[var(--text-secondary)] font-medium mb-1">Application Link</label>
               <input
                 value={editingOpp.applicationLink || ''}
                 onChange={(e) => setEditingOpp({ ...editingOpp, applicationLink: e.target.value })}
-                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none"
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-[var(--border)] text-white outline-none"
               />
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setEditingOpp(null)}
-                className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs"
+                className="px-4 py-2 rounded-lg bg-[var(--surface)] text-[var(--text-secondary)] hover:text-white text-xs"
               >
                 Cancel
               </button>

@@ -62,11 +62,6 @@ const adminOnly = authorize('admin');
  */
 const staffOnly = authorize('faculty', 'admin');
 
-// Retained alias shortcuts mapped to admin / staff for compatibility
-const placementOrAdmin = adminOnly;
-const placementOnly = adminOnly;
-const staffAndPlacement = staffOnly;
-
 /**
  * Generic Ownership Middleware Factory for IDOR protection
  * Usage: requireOwnership(Model, 'id', 'user')
@@ -113,9 +108,6 @@ module.exports = {
   authorize,
   adminOnly,
   staffOnly,
-  placementOnly,
-  placementOrAdmin,
-  staffAndPlacement,
   requireOwnership,
   isOwnerOrAdmin,
 };

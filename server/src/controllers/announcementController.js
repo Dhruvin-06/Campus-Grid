@@ -5,7 +5,7 @@ const asyncHandler = require('express-async-handler');
 
 // @desc    Create announcement
 // @route   POST /api/announcements
-// @access  Private/Admin/Faculty/Placement
+// @access  Private/Admin/Faculty
 const createAnnouncement = asyncHandler(async (req, res) => {
   const { title, content, type, targetAudience, targetBranch, targetYear, expiresAt, isPinned } = req.body;
 

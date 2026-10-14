@@ -165,7 +165,7 @@ const saveOpportunity = asyncHandler(async (req, res) => {
 
 // @desc    Get all opportunities for admin review (including unpublished)
 // @route   GET /api/opportunities/admin/all
-// @access  Private/Admin/Placement
+// @access  Private/Admin
 const getAllOpportunitiesAdmin = asyncHandler(async (req, res) => {
   const { type, verified, page = 1, limit = 20 } = req.query;
   const filter = {};

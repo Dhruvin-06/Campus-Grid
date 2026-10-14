@@ -20,7 +20,6 @@ const contentRoutes = require('./src/routes/contentRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const opportunityRoutes = require('./src/routes/opportunityRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
-const aiRoutes = require('./src/routes/aiRoutes');
 
 // ─── App Setup ─────────────────────────────────────────────────────────────────
 const app = express();
@@ -62,7 +61,6 @@ app.use('/api', contentRoutes);           // /api/announcements, /api/feed
 app.use('/api/admin', adminRoutes);
 app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

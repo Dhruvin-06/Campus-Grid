@@ -159,11 +159,10 @@ export default function SettingsPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">System Preferences</span>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2">
-          <Shield size={26} className="text-indigo-400" /> Settings
+        <h1 className="text-xl font-bold mt-1 flex items-center gap-2">
+          <Shield size={26} className="text-[var(--primary)]" /> Settings
         </h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-[var(--text-muted)] mt-1">
           Manage your account profile, security preferences, and notifications.
         </p>
       </div>
@@ -172,7 +171,7 @@ export default function SettingsPage() {
 
         {/* ── Sidebar Tabs ── */}
         <div className="md:w-52 flex-shrink-0">
-          <div className="saas-card p-2 space-y-1">
+          <div className="card p-2 space-y-1">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} id={`settings-tab-${id}`} onClick={() => setTab(id)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-all"
@@ -198,7 +197,7 @@ export default function SettingsPage() {
               {tab === 'profile' && (
                 <div className="space-y-5">
                   {/* Avatar */}
-                  <div className="glass-card p-6">
+                  <div className="card p-6">
                     <h2 className="font-bold text-base mb-4 flex items-center gap-2">
                       <User size={18} style={{ color: '#6366f1' }} /> Profile Picture
                     </h2>
@@ -209,8 +208,8 @@ export default function SettingsPage() {
                           {avatarPreview ? (
                             <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-white"
-                              style={{ background: 'linear-gradient(135deg, #6366f1, #06b6d4)' }}>
+                            <div className="w-full h-full flex items-center justify-center text-xl font-bold text-white"
+                              style={{ background: 'var(--primary)' }}>
                               {user.name?.[0]}
                             </div>
                           )}
@@ -238,7 +237,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Basic Info */}
-                  <div className="glass-card p-6 space-y-4">
+                  <div className="card p-6 space-y-4">
                     <h2 className="font-bold text-base flex items-center gap-2">
                       <User size={18} style={{ color: '#06b6d4' }} /> Basic Information
                     </h2>
@@ -281,7 +280,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Social Links */}
-                  <div className="glass-card p-6 space-y-4">
+                  <div className="card p-6 space-y-4">
                     <h2 className="font-bold text-base flex items-center gap-2">
                       🔗 Social Links
                     </h2>
@@ -301,7 +300,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Skills */}
-                  <div className="glass-card p-6 space-y-4">
+                  <div className="card p-6 space-y-4">
                     <h2 className="font-bold text-base flex items-center gap-2">
                       ⚡ Skills & Interests
                     </h2>
@@ -315,8 +314,8 @@ export default function SettingsPage() {
                             className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
                             style={{
                               background: profile.skills.includes(skill) ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
-                              color: profile.skills.includes(skill) ? 'var(--color-primary-light)' : 'var(--text-muted)',
-                              border: `1px solid ${profile.skills.includes(skill) ? 'rgba(99,102,241,0.4)' : 'var(--border-glass)'}`,
+                              color: profile.skills.includes(skill) ? 'var(--primary)' : 'var(--text-muted)',
+                              border: `1px solid ${profile.skills.includes(skill) ? 'rgba(99,102,241,0.4)' : 'var(--border)'}`,
                             }}>
                             {profile.skills.includes(skill) ? '✓ ' : ''}{skill}
                           </button>
@@ -345,7 +344,7 @@ export default function SettingsPage() {
               {/* ═══════════ SECURITY ═══════════ */}
               {tab === 'security' && (
                 <div className="space-y-5">
-                  <div className="glass-card p-6 space-y-5">
+                  <div className="card p-6 space-y-5">
                     <h2 className="font-bold text-base flex items-center gap-2">
                       <Lock size={18} style={{ color: '#ef4444' }} /> Change Password
                     </h2>
@@ -424,7 +423,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Active Sessions info */}
-                  <div className="glass-card p-6">
+                  <div className="card p-6">
                     <h2 className="font-bold text-base mb-3 flex items-center gap-2">
                       <Monitor size={18} style={{ color: '#8b5cf6' }} /> Account Info
                     </h2>
@@ -449,7 +448,7 @@ export default function SettingsPage() {
               {/* ═══════════ NOTIFICATIONS ═══════════ */}
               {tab === 'notifications' && (
                 <div className="space-y-5">
-                  <div className="glass-card p-6 space-y-1">
+                  <div className="card p-6 space-y-1">
                     <h2 className="font-bold text-base mb-4 flex items-center gap-2">
                       <Bell size={18} style={{ color: '#f59e0b' }} /> Notification Preferences
                     </h2>
@@ -467,7 +466,7 @@ export default function SettingsPage() {
                         {/* Toggle Switch */}
                         <button onClick={() => setNotifPrefs((p) => ({ ...p, [key]: !p[key as keyof typeof p] }))}
                           className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
-                          style={{ background: (notifPrefs as any)[key] ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)' }}>
+                          style={{ background: (notifPrefs as any)[key] ? 'var(--primary)' : 'rgba(255,255,255,0.1)' }}>
                           <div className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform"
                             style={{ left: (notifPrefs as any)[key] ? '22px' : '2px' }} />
                         </button>
@@ -487,7 +486,7 @@ export default function SettingsPage() {
               {tab === 'account' && (
                 <div className="space-y-5">
                   {/* Data export */}
-                  <div className="glass-card p-6">
+                  <div className="card p-6">
                     <h2 className="font-bold text-base mb-1 flex items-center gap-2">
                       <Download size={18} style={{ color: '#06b6d4' }} /> Export Your Data
                     </h2>
@@ -508,7 +507,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Sign out */}
-                  <div className="glass-card p-6">
+                  <div className="card p-6">
                     <h2 className="font-bold text-base mb-1 flex items-center gap-2">
                       <LogOut size={18} style={{ color: '#f59e0b' }} /> Sign Out
                     </h2>
@@ -523,7 +522,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Danger Zone */}
-                  <div className="glass-card p-6" style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
+                  <div className="card p-6" style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
                     <h2 className="font-bold text-base mb-1 flex items-center gap-2" style={{ color: '#ef4444' }}>
                       <AlertTriangle size={18} /> Danger Zone
                     </h2>

@@ -5,14 +5,14 @@ const {
   createCampusPost, getCampusPosts, updateCampusPost, likeCampusPost, commentOnCampusPost,
   approveCampusPost, getPendingCampusPosts, deleteCampusPost,
 } = require('../controllers/announcementController');
-const { protect, staffOnly, staffAndPlacement } = require('../middleware/auth');
+const { protect, staffOnly } = require('../middleware/auth');
 const { uploadImage } = require('../config/upload');
 
-// ─── Announcements (admin/faculty/placement post; all read) ────────────────────
+// ─── Announcements (admin/faculty post; all read) ──────────────────────────────
 router.get('/announcements', protect, getAnnouncements);
-router.post('/announcements', protect, staffAndPlacement, createAnnouncement);
-router.put('/announcements/:id', protect, staffAndPlacement, updateAnnouncement);
-router.delete('/announcements/:id', protect, staffAndPlacement, deleteAnnouncement);
+router.post('/announcements', protect, staffOnly, createAnnouncement);
+router.put('/announcements/:id', protect, staffOnly, updateAnnouncement);
+router.delete('/announcements/:id', protect, staffOnly, deleteAnnouncement);
 
 // ─── Campus Feed (student posts go to approval; admin/faculty auto-publish) ────
 router.get('/feed', protect, getCampusPosts);

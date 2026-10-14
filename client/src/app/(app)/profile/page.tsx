@@ -100,15 +100,14 @@ export default function ProfilePage() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Account Overview</span>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2">
-          <User size={26} className="text-indigo-400" /> My Profile
+        <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <User size={20} style={{ color: 'var(--primary)' }} /> My Profile
         </h1>
-        <p className="text-xs text-slate-400 mt-1">Manage your public academic identity, skills, and interests.</p>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>Manage your public identity, skills, and interests.</p>
       </div>
 
       {/* Profile card */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="saas-card p-8">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="card p-8">
         <div className="flex items-start gap-6">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
@@ -120,7 +119,7 @@ export default function ProfilePage() {
               }
             </div>
             <div className="absolute -bottom-1.5 -right-1.5 w-5 h-5 rounded-full border-2 border-slate-900"
-              style={{ background: 'var(--color-success)' }} />
+              style={{ background: 'var(--success)' }} />
           </div>
 
           {/* Info */}
@@ -134,16 +133,16 @@ export default function ProfilePage() {
                 className="input-field text-xl font-bold mb-2"
               />
             ) : (
-              <h2 className="text-2xl font-extrabold text-white">{user?.name}</h2>
+              <h2 className="text-xl font-bold">{user?.name}</h2>
             )}
-            <p className="text-xs text-slate-400 mb-2">
+            <p className="text-xs text-[var(--text-muted)] mb-2">
               {user?.rollNumber} · {user?.email}
             </p>
             <div className="flex flex-wrap gap-2">
               <span className="saas-badge" style={{ background: `${roleColors[user?.role || 'student']}20`, color: roleColors[user?.role || 'student'] }}>
                 {user?.role?.replace('_', ' ')}
               </span>
-              <span className="saas-badge saas-badge-indigo">{user?.branch}</span>
+              <span className="badge badge-primary">{user?.branch}</span>
               {user?.year && <span className="saas-badge saas-badge-violet">Year {user.year}</span>}
             </div>
           </div>
@@ -242,7 +241,7 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Skills */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="saas-card p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
           <Award size={18} style={{ color: '#f59e0b' }} /> Skills
         </h2>
@@ -280,7 +279,7 @@ export default function ProfilePage() {
                 {SUGGESTED_SKILLS.filter((s) => !form.skills.includes(s)).slice(0, 12).map((s) => (
                   <button key={s} onClick={() => addSkill(s)}
                     className="px-2.5 py-1 rounded-full text-xs font-medium transition-colors hover:opacity-90"
-                    style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary-light)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                    style={{ background: 'rgba(99,102,241,0.1)', color: 'var(--primary)', border: '1px solid rgba(99,102,241,0.2)' }}>
                     + {s}
                   </button>
                 ))}
@@ -291,7 +290,7 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Interests */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="saas-card p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
           <BookOpen size={18} style={{ color: 'var(--color-accent)' }} /> Interests
         </h2>
@@ -324,9 +323,9 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Stats */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="saas-card p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
         <h2 className="font-bold mb-4 flex items-center gap-2">
-          <Briefcase size={18} style={{ color: 'var(--color-primary)' }} /> Activity
+          <Briefcase size={18} style={{ color: 'var(--primary)' }} /> Activity
         </h2>
         <div className="grid grid-cols-3 gap-4 text-center">
           {[

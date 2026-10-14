@@ -69,13 +69,12 @@ function FeedCard({
   };
 
   return (
-    <motion.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-      className="card-glass rounded-2xl p-5 space-y-4"
-      style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+    <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+      className="card p-4 space-y-3">
       {/* Author row */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold text-white flex-shrink-0"
-          style={{ background: 'var(--gradient-primary)' }}>
+          style={{ background: 'var(--primary)' }}>
           {post.author?.avatar
             ? <img src={post.author.avatar} alt={post.author.name} className="w-full h-full object-cover" />
             : post.author?.name?.[0]?.toUpperCase()}
@@ -101,7 +100,7 @@ function FeedCard({
           <div className="flex items-center gap-1 flex-shrink-0 ml-1">
             <button
               onClick={() => onEdit?.(post)}
-              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-indigo-400"
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-[var(--primary)]"
               title="Edit Post"
             >
               <Pencil size={14} />
@@ -149,7 +148,7 @@ function FeedCard({
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-4 pt-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <div className="flex items-center gap-4 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
         <button onClick={() => onLike(post._id)}
           className="flex items-center gap-1.5 text-sm transition-all hover:scale-105"
           style={{ color: post.likes?.includes(user?._id) ? '#f43f5e' : 'var(--text-muted)' }}>
@@ -172,7 +171,7 @@ function FeedCard({
             {(post.comments || []).map((c: any, i: number) => (
               <div key={i} className="flex gap-2">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                  style={{ background: 'var(--gradient-primary)' }}>
+                  style={{ background: 'var(--primary)' }}>
                   {c.user?.name?.[0]?.toUpperCase()}
                 </div>
                 <div className="flex-1 px-3 py-2 rounded-xl text-sm"
@@ -186,11 +185,10 @@ function FeedCard({
               <input value={commentText} onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && submitComment()}
                 placeholder="Add a comment…"
-                className="flex-1 px-3 py-2 rounded-xl text-sm bg-transparent outline-none"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)' }} />
+                className="input-field flex-1 py-2 text-sm" />
               <button onClick={submitComment}
                 className="p-2 rounded-xl transition-all"
-                style={{ background: commentText.trim() ? 'var(--gradient-primary)' : 'rgba(255,255,255,0.05)' }}>
+                style={{ background: commentText.trim() ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}>
                 <Send size={14} color="white" />
               </button>
             </div>
@@ -346,7 +344,7 @@ export default function CampusFeedPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          <h1 className="text-xl font-bold flex items-center gap-2.5">
             <Newspaper size={28} className="text-pink-400" />
             Campus Feed
           </h1>
@@ -386,7 +384,7 @@ export default function CampusFeedPage() {
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button
                     onClick={() => setEditingItem({ type: 'announcement', id: ann._id, title: ann.title, content: ann.content })}
-                    className="p-1 rounded-lg hover:bg-white/10 text-indigo-400 transition-colors"
+                    className="p-1 rounded-lg hover:bg-white/10 text-[var(--primary)] transition-colors"
                     title="Edit Announcement"
                   >
                     <Pencil size={13} />
@@ -410,30 +408,25 @@ export default function CampusFeedPage() {
         {showCreatePost && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="card-glass rounded-2xl p-5 space-y-3 overflow-hidden"
-            style={{ border: '1px solid rgba(99,102,241,0.3)' }}>
+            className="card p-4 space-y-3 overflow-hidden">
             <h3 className="font-semibold">Create a Post</h3>
             <input value={newPost.title} onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
               placeholder="Title *"
-              className="w-full px-4 py-2.5 rounded-xl text-sm bg-transparent outline-none"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)' }} />
+              className="input-field" />
             <textarea value={newPost.content} onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
               placeholder="What would you like to share? *"
               rows={4}
-              className="w-full px-4 py-2.5 rounded-xl text-sm resize-none bg-transparent outline-none"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)' }} />
+              className="input-field resize-none" />
             <div className="flex gap-3">
               <select value={newPost.category} onChange={(e) => setNewPost({ ...newPost, category: e.target.value })}
-                className="flex-1 px-3 py-2 rounded-xl text-sm outline-none"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)' }}>
+                className="input-field flex-1">
                 {FEED_CATEGORIES.filter((c) => c.value !== 'all').map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
               <input value={newPost.tags} onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
                 placeholder="Tags (comma-separated)"
-                className="flex-1 px-3 py-2 rounded-xl text-sm bg-transparent outline-none"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)' }} />
+                className="input-field flex-1" />
             </div>
             <div className="flex justify-between items-center">
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -451,14 +444,13 @@ export default function CampusFeedPage() {
       </AnimatePresence>
 
       {/* Category filter */}
-      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: 'var(--bg-secondary)', scrollbarWidth: 'none' }}>
         {FEED_CATEGORIES.map(({ value, label, icon: Icon }) => (
           <button key={value} onClick={() => setCategory(value)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${category === value ? 'text-white' : ''}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors"
             style={{
-              background: category === value ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${category === value ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
-              color: category === value ? '#a5b4fc' : 'var(--text-muted)',
+              background: category === value ? 'var(--surface)' : 'transparent',
+              color: category === value ? 'var(--text-primary)' : 'var(--text-muted)',
               flexShrink: 0,
             }}>
             <Icon size={13} /> {label}

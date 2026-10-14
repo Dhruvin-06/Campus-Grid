@@ -11,8 +11,8 @@ import { Users, UserPlus, MessageSquare, Star, Search } from 'lucide-react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
 
 const SKILL_COLORS = [
-  '#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6',
-  '#ef4444', '#ec4899', '#14b8a6', '#f97316', '#84cc16',
+  '#818cf8', '#38bdf8', '#4ade80', '#fbbf24', '#a78bfa',
+  '#f87171', '#f472b6', '#2dd4bf', '#fb923c', '#a3e635',
 ];
 
 export default function PeersPage() {
@@ -21,12 +21,24 @@ export default function PeersPage() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<Set<string>>(new Set());
   const [connected, setConnected] = useState<Set<string>>(new Set(user?.connections?.map((c) => typeof c === 'string' ? c : c._id) || []));
+  const [pending, setPending] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         const res = await usersApi.getPeerMatches();
-        setMatches(res.data.matches || []);
+        const fetchedMatches = res.data.matches || [];
+        setMatches(fetchedMatches);
+        // Seed pending set from server-side hasPendingRequest flag
+        const pendingIds = new Set<string>(
+          fetchedMatches.filter((m: any) => m.hasPendingRequest).map((m: any) => m._id)
+        );
+        setPending(pendingIds);
+        // Also seed connected set from isConnected flag
+        const connectedIds = new Set<string>(
+          fetchedMatches.filter((m: any) => m.isConnected).map((m: any) => m._id)
+        );
+        setConnected((prev) => new Set([...prev, ...connectedIds]));
       } catch (err: any) {
         if (err.response?.data?.message) {
           toast(err.response.data.message, { icon: '💡' });
@@ -40,10 +52,15 @@ export default function PeersPage() {
     setConnecting((prev) => new Set(prev).add(userId));
     try {
       await usersApi.sendConnect(userId);
-      setConnected((prev) => new Set(prev).add(userId));
-      toast.success('Connection request sent! 🤝');
+      setPending((prev) => new Set(prev).add(userId));
+      toast.success('Connection request sent!');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to send request');
+      const msg = err.response?.data?.message || 'Failed to send request';
+      // If server says already sent, reflect that in UI silently
+      if (msg === 'Connection request already sent') {
+        setPending((prev) => new Set(prev).add(userId));
+      }
+      toast.error(msg);
     } finally {
       setConnecting((prev) => { const next = new Set(prev); next.delete(userId); return next; });
     }
@@ -52,29 +69,29 @@ export default function PeersPage() {
   const getSkillColor = (skill: string) => SKILL_COLORS[skill.charCodeAt(0) % SKILL_COLORS.length];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-          <Users size={28} className="text-emerald-400" />
+        <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <Users size={20} style={{ color: '#4ade80' }} />
           Peer Network
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
           Find students with complementary skills and interests.
         </p>
       </div>
 
       {/* Your skills */}
       {user?.skills && user.skills.length > 0 && (
-        <div className="glass-card p-5">
-          <p className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <Star size={16} style={{ color: 'var(--color-warning)' }} />
-            Your Skills (used for matching)
+        <div className="card p-4">
+          <p className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+            <Star size={14} style={{ color: '#fbbf24' }} />
+            Your Skills
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {user.skills.map((skill) => (
-              <span key={skill} className="px-3 py-1 rounded-full text-xs font-medium"
-                style={{ background: `${getSkillColor(skill)}20`, color: getSkillColor(skill), border: `1px solid ${getSkillColor(skill)}30` }}>
+              <span key={skill} className="px-2 py-0.5 rounded text-xs font-medium"
+                style={{ background: `${getSkillColor(skill)}18`, color: getSkillColor(skill) }}>
                 {skill}
               </span>
             ))}
@@ -84,45 +101,42 @@ export default function PeersPage() {
 
       {/* No skills warning */}
       {(!user?.skills || user.skills.length === 0) && (
-        <div className="glass-card p-5 border" style={{ borderColor: 'rgba(245,158,11,0.3)' }}>
-          <p className="text-sm font-medium" style={{ color: '#fbbf24' }}>
-            ⚠️ Add skills to your profile to get peer matches!
+        <div className="card p-4" style={{ borderColor: 'rgba(234,179,8,0.3)' }}>
+          <p className="text-sm font-medium" style={{ color: '#eab308' }}>
+            Add skills to your profile to get peer matches.
           </p>
-          <Link href="/profile" className="text-xs mt-1 inline-block" style={{ color: 'var(--color-primary-light)' }}>
+          <Link href="/profile" className="text-xs mt-1 inline-block" style={{ color: 'var(--primary)' }}>
             Go to Profile →
           </Link>
         </div>
       )}
 
-      {/* Peer matches grid */}
+      {/* Grid */}
       {loading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array(6).fill(0).map((_, i) => (
-            <div key={i} className="glass-card p-5 space-y-3">
+            <div key={i} className="card p-5 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="skeleton w-14 h-14 rounded-full" />
+                <div className="w-12 h-12 rounded-full animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
                 <div className="space-y-2 flex-1">
-                  <div className="skeleton h-4 w-3/4" />
-                  <div className="skeleton h-3 w-1/2" />
+                  <div className="h-4 w-3/4 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+                  <div className="h-3 w-1/2 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
                 </div>
-              </div>
-              <div className="flex gap-1 flex-wrap">
-                {Array(4).fill(0).map((_, j) => <div key={j} className="skeleton h-6 w-16 rounded-full" />)}
               </div>
             </div>
           ))}
         </div>
       ) : matches.length === 0 ? (
-        <div className="glass-card p-16 text-center">
-          <Users size={48} className="mx-auto mb-4 opacity-20" />
-          <p className="font-semibold">No peer matches found</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+        <div className="card p-12 text-center">
+          <Users size={32} className="mx-auto mb-3 opacity-20" />
+          <p className="font-medium" style={{ color: 'var(--text-primary)' }}>No peer matches found</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             Add more skills to your profile to find students with similar interests.
           </p>
         </div>
       ) : (
         <>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             Found {matches.length} students with overlapping skills
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -130,27 +144,28 @@ export default function PeersPage() {
               const commonSkills = (user?.skills || []).filter((s) => peer.skills?.includes(s));
               const isConnected = connected.has(peer._id);
               const isConnecting = connecting.has(peer._id);
+              const isPending = !isConnected && pending.has(peer._id);
 
               return (
                 <motion.div
                   key={peer._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07 }}
-                  className="glass-card p-5 flex flex-col gap-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="card p-4 flex flex-col gap-3"
                 >
-                  {/* Profile header */}
+                  {/* Profile */}
                   <div className="flex items-start gap-3">
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg text-white flex-shrink-0"
-                      style={{ background: 'linear-gradient(135deg, #6366f1, #06b6d4)' }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm text-white flex-shrink-0 overflow-hidden"
+                      style={{ background: 'var(--primary)' }}>
                       {peer.avatar
                         ? <img src={peer.avatar} alt={peer.name} className="w-full h-full object-cover rounded-full" />
                         : peer.name[0]
                       }
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold truncate">{peer.name}</h3>
-                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{peer.name}</h3>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                         {peer.rollNumber} · {peer.branch}{peer.year ? ` · Y${peer.year}` : ''}
                       </p>
                       {peer.bio && (
@@ -162,13 +177,13 @@ export default function PeersPage() {
                   {/* Common skills */}
                   {commonSkills.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                      <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
                         {commonSkills.length} common skill{commonSkills.length > 1 ? 's' : ''}
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1">
                         {commonSkills.map((skill) => (
-                          <span key={skill} className="px-2 py-0.5 rounded-full text-xs font-medium"
-                            style={{ background: `${getSkillColor(skill)}20`, color: getSkillColor(skill) }}>
+                          <span key={skill} className="px-2 py-0.5 rounded text-xs font-medium"
+                            style={{ background: `${getSkillColor(skill)}18`, color: getSkillColor(skill) }}>
                             ✓ {skill}
                           </span>
                         ))}
@@ -176,19 +191,19 @@ export default function PeersPage() {
                     </div>
                   )}
 
-                  {/* All skills */}
-                  <div className="flex flex-wrap gap-1.5">
+                  {/* Other skills */}
+                  <div className="flex flex-wrap gap-1">
                     {peer.skills?.filter((s) => !commonSkills.includes(s)).slice(0, 4).map((skill) => (
                       <span key={skill} className="tag">{skill}</span>
                     ))}
                   </div>
 
-                  {/* Social links */}
+                  {/* Social */}
                   {(peer.github || peer.linkedin) && (
                     <div className="flex gap-3">
                       {peer.github && (
                         <a href={peer.github} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs hover:opacity-80" style={{ color: 'var(--text-secondary)' }}>
+                          className="flex items-center gap-1 text-xs hover:opacity-80" style={{ color: 'var(--text-muted)' }}>
                           <FaGithub size={13} /> GitHub
                         </a>
                       )}
@@ -205,25 +220,31 @@ export default function PeersPage() {
                   <div className="flex gap-2 mt-auto">
                     <button
                       id={`connect-${peer._id}`}
-                      onClick={() => !isConnected && handleConnect(peer._id)}
-                      disabled={isConnecting || isConnected}
-                      className={`flex-1 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                        isConnected
-                          ? 'opacity-60 cursor-default'
-                          : 'btn-primary'
+                      onClick={() => !isConnected && !isPending && handleConnect(peer._id)}
+                      disabled={isConnecting || isConnected || isPending}
+                      className={`flex-1 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                        isConnected || isPending ? '' : 'btn-primary'
                       }`}
-                      style={isConnected ? { background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' } : {}}
+                      style={
+                        isConnected
+                          ? { background: 'var(--success-muted)', color: 'var(--success)' }
+                          : isPending
+                          ? { background: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }
+                          : {}
+                      }
                     >
                       {isConnecting
                         ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         : isConnected
                           ? '✓ Connected'
+                          : isPending
+                          ? '⏳ Request Sent'
                           : <><UserPlus size={13} /> Connect</>
                       }
                     </button>
                     <Link href={`/chat?userId=${peer._id}`}
-                      className="p-2 rounded-xl text-xs flex items-center justify-center transition-colors hover:bg-white/10"
-                      style={{ border: '1px solid var(--border-glass)', color: 'var(--text-secondary)' }}>
+                      className="p-2 rounded-lg text-xs flex items-center justify-center transition-colors hover:bg-white/5"
+                      style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
                       <MessageSquare size={15} />
                     </Link>
                   </div>

@@ -27,19 +27,7 @@ Role:        faculty
 Password:    pass1234
 
 --------------------------------------------------------------------------------
-3. PLACEMENT CELL ACCOUNTS
---------------------------------------------------------------------------------
-Name:        Placement 1
-Email:       p1@campus.edu
-Roll Number: PLC001
-Role:        placement
-Password:    pass1234
 
-Name:        Placement 2
-Email:       p2@campus.edu
-Roll Number: PLC002
-Role:        placement
-Password:    pass1234
 
 --------------------------------------------------------------------------------
 4. STUDENT ACCOUNTS

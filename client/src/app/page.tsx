@@ -6,40 +6,37 @@ import { GraduationCap, ArrowRight, UserPlus } from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-20" style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl opacity-15" style={{ background: 'radial-gradient(circle, #06b6d4, transparent)' }} />
-      </div>
-
-      <div className="w-full max-w-lg relative z-10 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md text-center">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-6 animate-pulse-glow"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #06b6d4)' }}>
-            <GraduationCap size={40} color="white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
+            style={{ background: 'var(--primary)' }}>
+            <GraduationCap size={32} color="white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-4">CampusGrid</h1>
-          <p style={{ color: 'var(--text-secondary)' }} className="text-lg mb-8 max-w-md mx-auto">
-            The smart operating system for your entire campus life. Connect, learn, and grow.
+          <h1 className="text-4xl md:text-5xl font-bold mb-3" style={{ color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+            CampusGrid
+          </h1>
+          <p className="text-base mb-8 max-w-sm mx-auto" style={{ color: 'var(--text-secondary)' }}>
+            The smart platform for your entire campus life. Connect, learn, and grow.
           </p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
-          <Link href="/login" className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-8 text-base">
-            Sign In <ArrowRight size={18} />
+          <Link href="/login" className="btn-primary w-full sm:w-auto py-2.5 px-6 text-sm">
+            Sign In <ArrowRight size={16} />
           </Link>
-          <Link href="/register" className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-8 text-base">
-            <UserPlus size={18} /> Create Account
+          <Link href="/register" className="btn-secondary w-full sm:w-auto py-2.5 px-6 text-sm">
+            <UserPlus size={16} /> Create Account
           </Link>
         </motion.div>
       </div>
