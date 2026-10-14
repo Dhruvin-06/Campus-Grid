@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -254,9 +254,9 @@ export default function ResourcesPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {Array(8).fill(0).map((_, i) => (
                 <div key={i} className="card p-5 space-y-3">
-                  <div className="h-5 w-3/4 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
-                  <div className="h-4 w-full rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
-                  <div className="h-4 w-1/2 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+                  <div className="h-5 w-3/4 rounded animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
+                  <div className="h-4 w-full rounded animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
+                  <div className="h-4 w-1/2 rounded animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
                 </div>
               ))}
             </div>
@@ -329,7 +329,7 @@ export default function ResourcesPage() {
                     <button
                       id={`like-${resource._id}`}
                       onClick={() => handleLike(resource._id)}
-                      className="p-1.5 rounded-md transition-colors hover:bg-white/5 flex items-center gap-1 text-xs"
+                      className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-secondary)] flex items-center gap-1 text-xs"
                       style={{ color: 'var(--text-muted)' }}
                     >
                       <Heart size={14} /> {resource.likes?.length || 0}

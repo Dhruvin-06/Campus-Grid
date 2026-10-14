@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -65,20 +65,20 @@ function OpportunityCard({
         <div className="flex items-center gap-1">
           {canManage && onEdit && (
             <button onClick={() => onEdit(opp)}
-              className="p-1.5 rounded-md transition-colors hover:bg-white/5"
+              className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-secondary)]"
               style={{ color: 'var(--primary)' }} title="Edit" aria-label="Edit opportunity">
               <Pencil size={14} />
             </button>
           )}
           {canManage && onDelete && (
             <button onClick={() => onDelete(opp._id)}
-              className="p-1.5 rounded-md transition-colors hover:bg-white/5"
+              className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-secondary)]"
               style={{ color: 'var(--danger)' }} title="Delete" aria-label="Delete opportunity">
               <Trash2 size={14} />
             </button>
           )}
           <button onClick={() => onSave(opp._id)}
-            className="p-1.5 rounded-md transition-colors hover:bg-white/5"
+            className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-secondary)]"
             title={opp.isSaved ? 'Unsave' : 'Save'} aria-label={opp.isSaved ? 'Unsave' : 'Save'}>
             {opp.isSaved
               ? <BookmarkCheck size={15} style={{ color: 'var(--primary)' }} />

@@ -175,7 +175,15 @@ const sendConnectionRequest = asyncHandler(async (req, res) => {
   }
 
   await User.findByIdAndUpdate(req.params.id, {
-    $push: { connectionRequests: req.user.id },
+    $push: {
+      connectionRequests: req.user.id,
+      notifications: {
+        message: `${req.user.name || 'Someone'} sent you a connection request.`,
+        type: 'info',
+        read: false,
+        createdAt: new Date(),
+      },
+    },
   });
 
   res.json({ success: true, message: 'Connection request sent' });
@@ -195,6 +203,14 @@ const acceptConnection = asyncHandler(async (req, res) => {
 
   await User.findByIdAndUpdate(requesterId, {
     $addToSet: { connections: req.user.id },
+    $push: {
+      notifications: {
+        message: `${req.user.name || 'A user'} accepted your connection request!`,
+        type: 'success',
+        read: false,
+        createdAt: new Date(),
+      },
+    },
   });
 
   res.json({ success: true, message: 'Connection accepted' });

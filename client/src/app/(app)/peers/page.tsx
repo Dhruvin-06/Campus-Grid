@@ -7,7 +7,7 @@ import { User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { Users, UserPlus, MessageSquare, Star, Search } from 'lucide-react';
+import { Users, UserPlus, MessageSquare, Star, Search, Check, X, Clock } from 'lucide-react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
 
 const SKILL_COLORS = [
@@ -16,12 +16,13 @@ const SKILL_COLORS = [
 ];
 
 export default function PeersPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [matches, setMatches] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<Set<string>>(new Set());
   const [connected, setConnected] = useState<Set<string>>(new Set(user?.connections?.map((c) => typeof c === 'string' ? c : c._id) || []));
   const [pending, setPending] = useState<Set<string>>(new Set());
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -56,13 +57,39 @@ export default function PeersPage() {
       toast.success('Connection request sent!');
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to send request';
-      // If server says already sent, reflect that in UI silently
       if (msg === 'Connection request already sent') {
         setPending((prev) => new Set(prev).add(userId));
       }
       toast.error(msg);
     } finally {
       setConnecting((prev) => { const next = new Set(prev); next.delete(userId); return next; });
+    }
+  };
+
+  const handleAccept = async (requesterId: string) => {
+    setActionInProgress(requesterId);
+    try {
+      await usersApi.acceptConnect(requesterId);
+      toast.success('Connection accepted!');
+      setConnected((prev) => new Set(prev).add(requesterId));
+      if (refreshUser) await refreshUser();
+    } catch {
+      toast.error('Failed to accept connection request');
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handleDecline = async (requesterId: string) => {
+    setActionInProgress(requesterId);
+    try {
+      await usersApi.removeConnect(requesterId);
+      toast.success('Connection request declined');
+      if (refreshUser) await refreshUser();
+    } catch {
+      toast.error('Failed to decline request');
+    } finally {
+      setActionInProgress(null);
     }
   };
 
@@ -80,6 +107,62 @@ export default function PeersPage() {
           Find students with complementary skills and interests.
         </p>
       </div>
+
+      {/* Incoming Connection Requests */}
+      {user?.connectionRequests && user.connectionRequests.length > 0 && (
+        <div className="card p-5 border-l-4" style={{ borderLeftColor: 'var(--primary)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <Clock size={16} style={{ color: 'var(--primary)' }} />
+              Pending Connection Requests
+              <span className="badge badge-primary">{user.connectionRequests.length}</span>
+            </h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {user.connectionRequests.map((reqItem: any) => {
+              const reqUser = typeof reqItem === 'object' ? reqItem : { _id: reqItem, name: 'Student' };
+              const isProcessing = actionInProgress === reqUser._id;
+              return (
+                <div key={reqUser._id} className="p-3 rounded-lg border flex flex-col justify-between gap-3"
+                  style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm text-white flex-shrink-0 overflow-hidden"
+                      style={{ background: 'var(--primary)' }}>
+                      {reqUser.avatar ? (
+                        <img src={reqUser.avatar} alt={reqUser.name} className="w-full h-full object-cover" />
+                      ) : (
+                        reqUser.name?.[0]?.toUpperCase() || 'U'
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-sm truncate" style={{ color: 'var(--text-primary)' }}>{reqUser.name}</h4>
+                      <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                        {reqUser.branch ? `${reqUser.branch}${reqUser.year ? ` · Year ${reqUser.year}` : ''}` : 'Campus peer'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => handleAccept(reqUser._id)}
+                      disabled={isProcessing}
+                      className="flex-1 btn-primary text-xs py-1.5"
+                    >
+                      <Check size={13} /> Accept
+                    </button>
+                    <button
+                      onClick={() => handleDecline(reqUser._id)}
+                      disabled={isProcessing}
+                      className="btn-secondary text-xs py-1.5 px-3"
+                    >
+                      <X size={13} /> Decline
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Your skills */}
       {user?.skills && user.skills.length > 0 && (
@@ -117,10 +200,10 @@ export default function PeersPage() {
           {Array(6).fill(0).map((_, i) => (
             <div key={i} className="card p-5 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+                <div className="w-12 h-12 rounded-full animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
                 <div className="space-y-2 flex-1">
-                  <div className="h-4 w-3/4 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
-                  <div className="h-3 w-1/2 rounded animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+                  <div className="h-4 w-3/4 rounded animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
+                  <div className="h-3 w-1/2 rounded animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
                 </div>
               </div>
             </div>
@@ -243,7 +326,7 @@ export default function PeersPage() {
                       }
                     </button>
                     <Link href={`/chat?userId=${peer._id}`}
-                      className="p-2 rounded-lg text-xs flex items-center justify-center transition-colors hover:bg-white/5"
+                      className="p-2 rounded-lg text-xs flex items-center justify-center transition-colors hover:bg-[var(--bg-secondary)]"
                       style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
                       <MessageSquare size={15} />
                     </Link>

@@ -69,7 +69,8 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: 'rgba(15,23,42,0.4)',
+            backdropFilter: 'blur(4px)',
           }}
           onClick={onClose}
           role="dialog"
@@ -77,9 +78,9 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
           aria-label={title || 'Dialog'}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
+            initial={{ opacity: 0, scale: 0.97, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="w-full max-h-[90vh] overflow-y-auto relative my-auto mx-auto"
             style={{
@@ -88,7 +89,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
               margin: 'auto',
               background: 'var(--surface)',
               border: '1px solid var(--border)',
-              boxShadow: 'var(--shadow-lg)',
+              boxShadow: '0 20px 60px rgba(15,23,42,0.15)',
               borderRadius: 'var(--radius-lg)',
               padding: '1.5rem',
             }}
@@ -100,11 +101,11 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
                 <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-md hover:bg-white/5 transition-colors"
+                  className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-secondary)]"
                   aria-label="Close dialog"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
             )}
@@ -116,3 +117,4 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
     document.body
   );
 }
+

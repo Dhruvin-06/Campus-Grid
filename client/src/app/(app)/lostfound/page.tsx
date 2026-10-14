@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -157,9 +157,9 @@ export default function LostFoundPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array(6).fill(0).map((_, i) => (
             <div key={i} className="card p-5 space-y-3">
-              <div className="h-36 rounded-xl animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
-              <div className="h-4 w-3/4 animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
-              <div className="h-3 w-full animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+              <div className="h-36 rounded-xl animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
+              <div className="h-4 w-3/4 animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
+              <div className="h-3 w-full animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
             </div>
           ))}
         </div>

@@ -17,7 +17,7 @@ export interface User {
   isVerified: boolean;
   isActive: boolean;
   connections?: User[];
-  connectionRequests?: string[];
+  connectionRequests?: (User | string)[];
   linkedIn?: string;
   linkedin?: string;
   github?: string;

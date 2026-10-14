@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
+  refreshUser: () => Promise<User | void>;
 }
 
 interface RegisterData {
@@ -37,6 +38,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await authApi.getMe();
+      if (res.data.user) {
+        setUser(res.data.user);
+        localStorage.setItem('campusgrid_user', JSON.stringify(res.data.user));
+        return res.data.user;
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   // Load stored auth state on mount
   useEffect(() => {
     const storedToken = localStorage.getItem('campusgrid_token');
@@ -46,9 +60,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
       initSocket(storedToken);
+      refreshUser();
     }
     setLoading(false);
-  }, []);
+  }, [refreshUser]);
 
   const persistAuth = (token: string, user: User) => {
     localStorage.setItem('campusgrid_token', token);
@@ -122,6 +137,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         register,
         logout,
         updateUser,
+        refreshUser,
       }}
     >
       {children}

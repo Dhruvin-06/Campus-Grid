@@ -65,7 +65,9 @@ const login = asyncHandler(async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 const getMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id).populate('connections', 'name avatar rollNumber branch');
+  const user = await User.findById(req.user.id)
+    .populate('connections', 'name avatar rollNumber branch year skills')
+    .populate('connectionRequests', 'name avatar rollNumber branch year skills interests');
   res.json({ success: true, user });
 });
 

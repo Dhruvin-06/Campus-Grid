@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,10 +18,10 @@ interface Notification {
 }
 
 const typeConfig = {
-  info:    { color: '#818cf8', bg: 'var(--primary-muted)', Icon: Info },
-  success: { color: '#4ade80', bg: 'var(--success-muted)', Icon: CheckCircle2 },
-  warning: { color: '#fbbf24', bg: 'var(--warning-muted)', Icon: AlertTriangle },
-  error:   { color: '#f87171', bg: 'var(--danger-muted)',  Icon: X },
+  info:    { color: 'var(--primary)',  bg: 'var(--primary-muted)', Icon: Info },
+  success: { color: 'var(--success)',  bg: 'var(--success-muted)', Icon: CheckCircle2 },
+  warning: { color: 'var(--warning)',  bg: 'var(--warning-muted)', Icon: AlertTriangle },
+  error:   { color: 'var(--danger)',   bg: 'var(--danger-muted)',  Icon: X },
 };
 
 function timeAgo(dateStr: string) {
@@ -52,8 +52,8 @@ function NotificationItem({ notif, onMarkRead, onDelete }: {
       exit={{ opacity: 0, height: 0, marginBottom: 0 }}
       className="flex items-start gap-3 p-3 rounded-lg group transition-colors"
       style={{
-        background: notif.read ? 'transparent' : 'var(--primary-muted)',
-        border: `1px solid ${notif.read ? 'var(--border)' : 'rgba(99,102,241,0.15)'}`,
+        background: notif.read ? 'var(--surface)' : 'var(--primary-muted)',
+        border: `1px solid ${notif.read ? 'var(--border)' : 'rgba(79,70,229,0.2)'}`,
       }}
     >
       {/* Unread dot */}
@@ -81,13 +81,13 @@ function NotificationItem({ notif, onMarkRead, onDelete }: {
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
         {!notif.read && (
           <button onClick={() => onMarkRead(notif._id)}
-            className="p-1.5 rounded-md hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-secondary)]"
             title="Mark as read" aria-label="Mark as read">
             <CheckCheck size={14} style={{ color: 'var(--success)' }} />
           </button>
         )}
         <button onClick={() => onDelete(notif._id)}
-          className="p-1.5 rounded-md hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-md hover:bg-[var(--bg-secondary)] transition-colors"
           title="Delete" aria-label="Delete notification">
           <Trash2 size={14} style={{ color: 'var(--danger)' }} />
         </button>
@@ -210,7 +210,7 @@ export default function NotificationsPage() {
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: 'var(--bg-tertiary)' }} />
+            <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
           ))}
         </div>
       ) : displayed.length === 0 ? (
